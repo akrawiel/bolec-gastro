@@ -1,0 +1,23 @@
+$sizes-names:
+  xs,
+  sm,
+  md,
+  lg,
+  xl;
+
+$sizes-values:
+  0.25rem,
+  0.5rem,
+  1rem,
+  2rem,
+  4rem;
+
+@for $index from 1 through length($sizes-names) {
+  .mb-#{nth($sizes-names, $index)} {
+    margin-bottom: nth($sizes-values, $index);
+  }
+
+  .gap-#{nth($sizes-names, $index)} {
+    grid-gap: nth($sizes-values, $index);
+  }
+}
