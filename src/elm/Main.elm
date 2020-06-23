@@ -2,11 +2,11 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import Entities.Table exposing (mapTableForIndex, viewTables)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy)
+import Types exposing (Model, Msg(..), TableState(..))
 import Url
 
 
@@ -26,40 +26,11 @@ main =
 -- INIT
 
 
-type TableState
-    = Empty
-    | HasCustomers Int
-
-
-type alias Table =
-    { name : String
-    , state : TableState
-    , id : Int
-    }
-
-
-type alias Model =
-    { key : Nav.Key
-    , url : Url.Url
-    , tables : List Table
-    , selectedTable : Maybe Table
-    , customersForTable : Int
-    }
-
-
-mapTable : Int -> Table
-mapTable index =
-    { name = "Table " ++ String.fromInt index
-    , id = index
-    , state = Empty
-    }
-
-
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( { key = key
       , url = url
-      , tables = List.map mapTable (List.range 1 16)
+      , tables = List.map mapTableForIndex (List.range 1 16)
       , selectedTable = Nothing
       , customersForTable = 1
       }
@@ -69,16 +40,6 @@ init _ url key =
 
 
 -- UPDATE
-
-
-type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChanged Url.Url
-    | ChangeSelectedTable (Maybe Table)
-    | IncrementCustomersForTable
-    | DecrementCustomersForTable
-    | ReserveTable Int Int
-    | EmptyTable Int
 
 
 handleTableReservation : Model -> Int -> TableState -> Model
@@ -151,52 +112,35 @@ subscriptions _ =
 -- VIEW
 
 
-getTableTileLabel : Table -> String
-getTableTileLabel table =
-    case table.state of
-        Empty ->
-            "Empty"
-
-        HasCustomers customerCount ->
-            "Customers: " ++ String.fromInt customerCount
-
-
-viewTable : Table -> Html Msg
-viewTable table =
-    button [ class "button table-tile", onClick (ChangeSelectedTable (Just table)) ]
-        [ div [ class "font-size-lg" ] [ text table.name ]
-        , div [ class "font-size-md" ] [ text (getTableTileLabel table) ]
-        ]
-
-
-viewKeyedTable : Table -> ( String, Html Msg )
-viewKeyedTable table =
-    ( String.fromInt table.id, lazy viewTable table )
-
-
-viewTables : List Table -> Html Msg
-viewTables tables =
-    Keyed.node "div" [ class "table-grid" ] (List.map viewKeyedTable tables)
-
-
 viewSidePanel : Model -> Html Msg
 viewSidePanel { customersForTable, selectedTable } =
     aside [ class "side-panel" ]
         [ case selectedTable of
             Just table ->
-                div [ class "table-settings-container" ]
-                    [ div [ class "font-size-lg" ] [ text table.name ]
+                div [ class "table-settings-container font-size-xl" ]
+                    [ div [ class "mb-lg text-center" ] [ text table.name ]
                     , case table.state of
                         Empty ->
                             div []
-                                [ div []
-                                    [ button [ class "button", onClick DecrementCustomersForTable ] [ text "-" ]
-                                    , div [] [ text (String.fromInt customersForTable) ]
-                                    , button [ class "button", onClick IncrementCustomersForTable ] [ text "+" ]
-                                    ]
-                                , div []
+                                [ div [ class "mb-sm font-size-md text-center" ] [ text "Customer count" ]
+                                , div [ class "mb-sm grid cols-3 gap-sm text-center" ]
                                     [ button
                                         [ class "button"
+                                        , onClick DecrementCustomersForTable
+                                        , disabled (customersForTable == 1)
+                                        ]
+                                        [ text "-" ]
+                                    , div [] [ text (String.fromInt customersForTable) ]
+                                    , button
+                                        [ class "button"
+                                        , onClick IncrementCustomersForTable
+                                        , disabled (customersForTable == 4)
+                                        ]
+                                        [ text "+" ]
+                                    ]
+                                , div [ class "mb-sm" ]
+                                    [ button
+                                        [ class "button width-full"
                                         , onClick
                                             (ReserveTable table.id
                                                 customersForTable
@@ -207,9 +151,9 @@ viewSidePanel { customersForTable, selectedTable } =
                                 ]
 
                         HasCustomers _ ->
-                            button [ class "button", onClick (EmptyTable table.id) ] [ text "Empty table" ]
+                            button [ class "button width-full mb-sm", onClick (EmptyTable table.id) ] [ text "Empty table" ]
                     , div []
-                        [ button [ class "button", onClick (ChangeSelectedTable Nothing) ]
+                        [ button [ class "button width-full", onClick (ChangeSelectedTable Nothing) ]
                             [ text "Cancel" ]
                         ]
                     ]
