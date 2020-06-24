@@ -1,0 +1,13 @@
+* TODO list
+  - [X] tables reservation
+  - [ ] meals/drinks database (json-server)
+        - [ ] CRUD interface
+  - [ ] orders
+        - [ ] meals/drinks list
+        - [ ] meals/drinks ordering
+        - [ ] payment handling (offline only)
+        - [ ] tips
+  - [ ] application appearance
+        - [ ] module transitions
+        - [ ] CSS refurbish
+        - [ ] logo
