@@ -1,0 +1,15 @@
+.meals {
+  &__container {
+    display: grid;
+    grid-template-columns: 1fr 3rem 3rem;
+  }
+
+  &__card {
+    background-color: $light;
+    color: $background;
+
+    > :nth-child(2) {
+      text-align: right;
+    }
+  }
+}

@@ -16,6 +16,8 @@ body {
 @import "./styles/flex.scss";
 @import "./styles/spacing.scss";
 
+@import "./styles/meals.scss";
+
 .table-grid {
   box-sizing: border-box;
   display: grid;
@@ -103,4 +105,8 @@ body {
 
 .text-center {
   text-align: center;
+}
+
+.text-right {
+  text-align: right;
 }

@@ -1,5 +1,6 @@
 module Entities.Table exposing (Table, TableState(..), mapTableForIndex, viewTables)
 
+import Entities.Order exposing (Order, empty)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -20,6 +21,7 @@ type alias Table =
     { name : String
     , state : TableState
     , id : Int
+    , order : Order
     }
 
 
@@ -32,6 +34,7 @@ mapTableForIndex index =
     { name = "Table " ++ String.fromInt index
     , id = index
     , state = Empty
+    , order = empty
     }
 
 

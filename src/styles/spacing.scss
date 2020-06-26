@@ -1,4 +1,5 @@
 $sizes-names:
+  none,
   xs,
   sm,
   md,
@@ -6,6 +7,7 @@ $sizes-names:
   xl;
 
 $sizes-values:
+  0,
   0.25rem,
   0.5rem,
   1rem,
@@ -17,7 +19,20 @@ $sizes-values:
     margin-bottom: nth($sizes-values, $index);
   }
 
+  .my-#{nth($sizes-names, $index)} {
+    margin-bottom: nth($sizes-values, $index);
+    margin-top: nth($sizes-values, $index);
+  }
+
+  .p-#{nth($sizes-names, $index)} {
+    padding: nth($sizes-values, $index) nth($sizes-values, $index);
+  }
+
   .gap-#{nth($sizes-names, $index)} {
     grid-gap: nth($sizes-values, $index);
+  }
+
+  .border-radius-#{nth($sizes-names, $index)} {
+    border-radius: nth($sizes-values, $index);
   }
 }

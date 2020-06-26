@@ -4,6 +4,7 @@ import Array exposing (Array)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Entities.Meal exposing (Meal, MealRequestMethods, MealRequestMsg, getMealRequester, updateMeals, viewMeals)
+import Entities.Order exposing (OrderMealChange(..), updateOrder, viewOrder)
 import Entities.Table exposing (Table, TableState(..), mapTableForIndex, viewTables)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -47,6 +48,7 @@ type Msg
     | ReserveTable Int Int
     | EmptyTable Int
     | MealMsg MealRequestMsg
+    | UpdateOrder OrderMealChange Table
 
 
 
@@ -138,6 +140,17 @@ update msg model =
             in
             ( { model | meals = meals }, Cmd.none )
 
+        UpdateOrder orderMealChange table ->
+            ( { model
+                | selectedTable =
+                    Just
+                        { table
+                            | order = updateOrder orderMealChange table.order
+                        }
+              }
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -192,7 +205,11 @@ viewSidePanel { customersForTable, selectedTable, meals } =
 
                         HasCustomers _ ->
                             div []
-                                [ viewMeals meals
+                                [ viewMeals
+                                    (\mealId -> UpdateOrder (OrderMealIncrement mealId) table)
+                                    (\mealId -> UpdateOrder (OrderMealDecrement mealId) table)
+                                    meals
+                                , viewOrder table.order
                                 , button [ class "button width-full mb-sm", onClick (EmptyTable table.id) ] [ text "Empty table" ]
                                 ]
                     , div []

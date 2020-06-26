@@ -1,9 +1,11 @@
 module Entities.Meal exposing (Meal, MealRequestMethods, MealRequestMsg, getMealRequester, updateMeals, viewMeals)
 
 import Array exposing (Array)
-import Html exposing (Html, div, text)
+import Html exposing (Attribute, Html, button, div, text)
+import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy3)
 import Http
 import Json.Decode exposing (Decoder, array, float, int, string, succeed)
 import Json.Decode.Pipeline exposing (required)
@@ -80,19 +82,34 @@ updateMeals msg default =
 -- VIEW
 
 
-viewMeal : Meal -> Html msg
-viewMeal meal =
-    div []
-        [ div [] [ text meal.name ]
-        , div [] [ text (Round.floor 2 meal.price ++ "zł") ]
+viewMeal : (Int -> msg) -> (Int -> msg) -> Meal -> Html msg
+viewMeal onIncrementClick onDecrementClick meal =
+    div [ class "meals__container gap-md mb-md" ]
+        [ div [ class "meals__card p-sm border-radius-sm" ]
+            [ div [ class "font-size-lg" ] [ text meal.name ]
+            , div [ class "font-size-sm" ] [ text (Round.floor 2 meal.price ++ "zł") ]
+            ]
+        , button [ class "p-none", onClick (onDecrementClick meal.id) ] [ text "-" ]
+        , button [ class "p-none", onClick (onIncrementClick meal.id) ] [ text "+" ]
         ]
 
 
-viewKeyedMeals : Meal -> ( String, Html msg )
-viewKeyedMeals meal =
-    ( String.fromInt meal.id, lazy viewMeal meal )
+viewKeyedMeals : (Int -> msg) -> (Int -> msg) -> Meal -> ( String, Html msg )
+viewKeyedMeals onIncrementClick onDecrementClick meal =
+    ( String.fromInt meal.id, lazy3 viewMeal onIncrementClick onDecrementClick meal )
 
 
-viewMeals : Array Meal -> Html msg
-viewMeals meals =
-    Keyed.node "div" [] (Array.toList <| Array.map viewKeyedMeals meals)
+viewMeals : (Int -> msg) -> (Int -> msg) -> Array Meal -> Html msg
+viewMeals onIncrementClick onDecrementClick meals =
+    div []
+        [ div [ class "mb-sm font-size-lg text-center" ] [ text "Meals" ]
+        , Keyed.node "div"
+            []
+            (Array.toList <|
+                Array.map
+                    (viewKeyedMeals onIncrementClick
+                        onDecrementClick
+                    )
+                    meals
+            )
+        ]
