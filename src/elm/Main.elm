@@ -1,16 +1,17 @@
 module Main exposing (main)
 
+import Array exposing (Array)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Entities.Table exposing (mapTableForIndex, viewTables)
+import Entities.Meal exposing (Meal, MealRequestMethods, MealRequestMsg, getMealRequester, updateMeals, viewMeals)
+import Entities.Table exposing (Table, TableState(..), mapTableForIndex, viewTables)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Types exposing (Model, Msg(..), TableState(..))
 import Url
 
 
-main : Program () Model Msg
+main : Program { apiUrl : String } Model Msg
 main =
     Browser.application
         { init = init
@@ -23,18 +24,50 @@ main =
 
 
 
+-- MODEL
+
+
+type alias Model =
+    { key : Nav.Key
+    , url : Url.Url
+    , tables : List Table
+    , selectedTable : Maybe Table
+    , customersForTable : Int
+    , meals : Array Meal
+    , mealRequester : MealRequestMethods
+    }
+
+
+type Msg
+    = LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
+    | ChangeSelectedTable (Maybe Table)
+    | IncrementCustomersForTable
+    | DecrementCustomersForTable
+    | ReserveTable Int Int
+    | EmptyTable Int
+    | MealMsg MealRequestMsg
+
+
+
 -- INIT
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : { apiUrl : String } -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init { apiUrl } url key =
+    let
+        mealRequester =
+            getMealRequester apiUrl
+    in
     ( { key = key
       , url = url
       , tables = List.map mapTableForIndex (List.range 1 16)
       , selectedTable = Nothing
       , customersForTable = 1
+      , meals = Array.empty
+      , mealRequester = mealRequester
       }
-    , Cmd.none
+    , Cmd.map MealMsg mealRequester.getAllMeals
     )
 
 
@@ -98,6 +131,13 @@ update msg model =
         EmptyTable tableId ->
             ( handleTableReservation model tableId Empty, Cmd.none )
 
+        MealMsg requestMessage ->
+            let
+                meals =
+                    updateMeals requestMessage model.meals
+            in
+            ( { model | meals = meals }, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -113,7 +153,7 @@ subscriptions _ =
 
 
 viewSidePanel : Model -> Html Msg
-viewSidePanel { customersForTable, selectedTable } =
+viewSidePanel { customersForTable, selectedTable, meals } =
     aside [ class "side-panel" ]
         [ case selectedTable of
             Just table ->
@@ -151,7 +191,10 @@ viewSidePanel { customersForTable, selectedTable } =
                                 ]
 
                         HasCustomers _ ->
-                            button [ class "button width-full mb-sm", onClick (EmptyTable table.id) ] [ text "Empty table" ]
+                            div []
+                                [ viewMeals meals
+                                , button [ class "button width-full mb-sm", onClick (EmptyTable table.id) ] [ text "Empty table" ]
+                                ]
                     , div []
                         [ button [ class "button width-full", onClick (ChangeSelectedTable Nothing) ]
                             [ text "Cancel" ]
@@ -168,7 +211,7 @@ view model =
     { title = "Bolec Gastro"
     , body =
         [ div [ class "app-container" ]
-            [ viewTables model.tables
+            [ viewTables (\table -> ChangeSelectedTable (Just table)) model.tables
             , viewSidePanel model
             ]
         ]
