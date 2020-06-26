@@ -1,11 +1,26 @@
-module Entities.Table exposing (mapTableForIndex, viewTables)
+module Entities.Table exposing (Table, TableState(..), mapTableForIndex, viewTables)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy)
-import Types exposing (Msg(..), Table, TableState(..))
+
+
+
+-- TYPES
+
+
+type TableState
+    = Empty
+    | HasCustomers Int
+
+
+type alias Table =
+    { name : String
+    , state : TableState
+    , id : Int
+    }
 
 
 
@@ -34,19 +49,19 @@ getTableTileLabel table =
 -- VIEW HELPERS
 
 
-viewTable : Table -> Html Msg
-viewTable table =
-    button [ class "button table-tile", onClick (ChangeSelectedTable (Just table)) ]
+viewTable : (Table -> msg) -> Table -> Html msg
+viewTable onTableClick table =
+    button [ class "button table-tile", onClick (onTableClick table) ]
         [ div [ class "font-size-lg" ] [ text table.name ]
         , div [ class "font-size-md" ] [ text (getTableTileLabel table) ]
         ]
 
 
-viewKeyedTable : Table -> ( String, Html Msg )
-viewKeyedTable table =
-    ( String.fromInt table.id, lazy viewTable table )
+viewKeyedTable : (Table -> msg) -> Table -> ( String, Html msg )
+viewKeyedTable onTableClick table =
+    ( String.fromInt table.id, lazy (viewTable onTableClick) table )
 
 
-viewTables : List Table -> Html Msg
-viewTables tables =
-    Keyed.node "div" [ class "table-grid" ] (List.map viewKeyedTable tables)
+viewTables : (Table -> msg) -> List Table -> Html msg
+viewTables onTableClick tables =
+    Keyed.node "div" [ class "table-grid" ] (List.map (viewKeyedTable onTableClick) tables)
