@@ -8,6 +8,7 @@ module Entities.Order exposing
     , viewOrder
     )
 
+import Array exposing (Array)
 import Entities.Meal exposing (Meal)
 import Html exposing (Html, div, hr, text)
 import Html.Attributes exposing (class)
@@ -78,20 +79,60 @@ totalPayment { meals } =
 updateMealCount : Int -> Int -> OrderMeal -> OrderMeal
 updateMealCount mealId increment orderMeal =
     if orderMeal.meal.id == mealId then
-        { orderMeal | count = orderMeal.count + increment }
+        { orderMeal | count = Basics.max 0 (orderMeal.count + increment) }
 
     else
         orderMeal
 
 
-updateOrder : OrderMealChange -> Order -> Order
-updateOrder msg order =
+findMeal : Int -> Meal -> Maybe Meal -> Maybe Meal
+findMeal mealId meal currentOutput =
+    if meal.id == mealId && currentOutput == Nothing then
+        Just meal
+
+    else
+        currentOutput
+
+
+filterEmptyOrderMeals : OrderMeal -> Bool
+filterEmptyOrderMeals orderMeal =
+    orderMeal.count > 0
+
+
+updateOrder : OrderMealChange -> Array Meal -> Order -> Order
+updateOrder msg allMeals order =
     case msg of
         OrderMealIncrement mealId ->
-            { order | meals = List.map (updateMealCount mealId 1) order.meals }
+            { order
+                | meals =
+                    if
+                        List.isEmpty
+                            (List.filter (\orderMeal -> orderMeal.meal.id == mealId)
+                                order.meals
+                            )
+                    then
+                        let
+                            foundMeal =
+                                Array.foldl (findMeal mealId) Nothing allMeals
+                        in
+                        case foundMeal of
+                            Just meal ->
+                                order.meals ++ [ { count = 1, meal = meal } ]
+
+                            Nothing ->
+                                order.meals
+
+                    else
+                        List.map (updateMealCount mealId 1) order.meals
+            }
 
         OrderMealDecrement mealId ->
-            { order | meals = List.map (updateMealCount mealId -1) order.meals }
+            { order
+                | meals =
+                    order.meals
+                        |> List.map (updateMealCount mealId -1)
+                        |> List.filter filterEmptyOrderMeals
+            }
 
 
 
@@ -100,9 +141,10 @@ updateOrder msg order =
 
 viewOrderMeal : OrderMeal -> Html msg
 viewOrderMeal { meal, count } =
-    div [ class "flex justify-between" ]
+    div [ class "flex mb-xs" ]
         [ div [ class "font-size-md" ] [ text meal.name ]
-        , div [ class "font-size-sm" ]
+        , div [ class "flex-1 leaders mx-xs my-xs" ] []
+        , div [ class "font-size-md" ]
             [ text
                 (String.fromInt count
                     ++ " * "
@@ -114,18 +156,23 @@ viewOrderMeal { meal, count } =
         ]
 
 
-viewKeyedOrderMeals : Int -> OrderMeal -> ( String, Html msg )
-viewKeyedOrderMeals index orderMeal =
-    ( String.fromInt index, lazy viewOrderMeal orderMeal )
+viewKeyedOrderMeals : OrderMeal -> ( String, Html msg )
+viewKeyedOrderMeals orderMeal =
+    ( String.fromInt orderMeal.meal.id, lazy viewOrderMeal orderMeal )
 
 
 viewOrder : Order -> Html msg
 viewOrder order =
     div []
-        [ node "div" [ class "my-sm" ] (List.indexedMap viewKeyedOrderMeals order.meals)
-        , hr [] []
-        , div [ class "flex justify-between" ]
+        [ node "div"
+            [ class "mb-md" ]
+            (order.meals
+                |> List.sortBy (.meal >> .name)
+                |> List.map viewKeyedOrderMeals
+            )
+        , hr [ class "mb-md" ] []
+        , div [ class "flex justify-between mb-md font-size-lg" ]
             [ div [] [ text "Total payment: " ]
-            , div [] [ text (Round.floor 2 (totalPayment order) ++ "zł") ]
+            , div [] [ text (Round.floor 2 (totalPayment order)) ]
             ]
         ]

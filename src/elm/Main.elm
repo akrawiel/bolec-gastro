@@ -145,7 +145,7 @@ update msg model =
                 | selectedTable =
                     Just
                         { table
-                            | order = updateOrder orderMealChange table.order
+                            | order = updateOrder orderMealChange model.meals table.order
                         }
               }
             , Cmd.none
@@ -170,7 +170,7 @@ viewSidePanel { customersForTable, selectedTable, meals } =
     aside [ class "side-panel" ]
         [ case selectedTable of
             Just table ->
-                div [ class "table-settings-container font-size-xl" ]
+                div [ class "table-settings-container font-size-xl flex column" ]
                     [ div [ class "mb-lg text-center" ] [ text table.name ]
                     , case table.state of
                         Empty ->
@@ -204,7 +204,7 @@ viewSidePanel { customersForTable, selectedTable, meals } =
                                 ]
 
                         HasCustomers _ ->
-                            div []
+                            div [ class "flex column flex-1" ]
                                 [ viewMeals
                                     (\mealId -> UpdateOrder (OrderMealIncrement mealId) table)
                                     (\mealId -> UpdateOrder (OrderMealDecrement mealId) table)
