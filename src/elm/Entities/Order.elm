@@ -87,7 +87,7 @@ updateMealCount mealId increment orderMeal =
 
 findMeal : Int -> Meal -> Maybe Meal -> Maybe Meal
 findMeal mealId meal currentOutput =
-    if meal.id == mealId && currentOutput == Nothing then
+    if meal.id == mealId then
         Just meal
 
     else
