@@ -27,6 +27,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Url
+import Url.Parser as Parser
 
 
 main : Program { apiUrl : String } Model Msg
@@ -69,6 +70,11 @@ type Msg
     | MealMsg MealRequestMsg
     | DrinkMsg DrinkRequestMsg
     | UpdateOrder OrderMealChange Table
+
+
+type Page
+    = Main
+    | Admin
 
 
 
@@ -162,18 +168,10 @@ update msg model =
             ( handleTableReservation model tableId Empty, Cmd.none )
 
         MealMsg requestMessage ->
-            let
-                meals =
-                    updateMeals requestMessage model.meals
-            in
-            ( { model | meals = meals }, Cmd.none )
+            ( { model | meals = updateMeals requestMessage model.meals }, Cmd.none )
 
         DrinkMsg requestMessage ->
-            let
-                drinks =
-                    updateDrinks requestMessage model.drinks
-            in
-            ( { model | drinks = drinks }, Cmd.none )
+            ( { model | drinks = updateDrinks requestMessage model.drinks }, Cmd.none )
 
         UpdateOrder orderMealChange table ->
             ( { model
@@ -264,13 +262,31 @@ viewSidePanel { customersForTable, selectedTable, meals, drinks } =
         ]
 
 
+urlParser : Parser.Parser (Page -> a) a
+urlParser =
+    Parser.oneOf
+        [ Parser.map Main Parser.top
+        , Parser.map Admin (Parser.s "admin")
+        ]
+
+
 view : Model -> Document Msg
 view model =
     { title = "Bolec Gastro"
     , body =
-        [ div [ class "app-container" ]
-            [ viewTables (\table -> ChangeSelectedTable (Just table)) model.tables
-            , viewSidePanel model
-            ]
-        ]
+        let
+            children =
+                case Parser.parse urlParser model.url of
+                    Just Main ->
+                        [ viewTables (\table -> ChangeSelectedTable (Just table)) model.tables
+                        , viewSidePanel model
+                        ]
+
+                    Just Admin ->
+                        [ text "Admin!" ]
+
+                    Nothing ->
+                        [ text "Page not found" ]
+        in
+        [ div [ class "app-container" ] children ]
     }
