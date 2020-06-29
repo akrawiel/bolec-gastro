@@ -87,10 +87,10 @@ viewMeal onIncrementClick onDecrementClick meal =
     div [ class "meals__container gap-md mb-md" ]
         [ div [ class "meals__card p-sm border-radius-sm" ]
             [ div [ class "font-size-lg" ] [ text meal.name ]
-            , div [ class "font-size-sm" ] [ text (Round.floor 2 meal.price ++ "zł") ]
+            , div [ class "font-size-sm" ] [ text (Round.floor 2 meal.price) ]
             ]
-        , button [ class "p-none", onClick (onDecrementClick meal.id) ] [ text "-" ]
-        , button [ class "p-none", onClick (onIncrementClick meal.id) ] [ text "+" ]
+        , button [ class "button p-none", onClick (onDecrementClick meal.id) ] [ text "-" ]
+        , button [ class "button p-none", onClick (onIncrementClick meal.id) ] [ text "+" ]
         ]
 
 
@@ -108,9 +108,6 @@ viewMeals onIncrementClick onDecrementClick meals =
             (meals
                 |> Array.toList
                 |> List.sortBy .name
-                |> List.map
-                    (viewKeyedMeals onIncrementClick
-                        onDecrementClick
-                    )
+                |> List.map (viewKeyedMeals onIncrementClick onDecrementClick)
             )
         ]

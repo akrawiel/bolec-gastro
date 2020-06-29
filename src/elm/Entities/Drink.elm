@@ -89,10 +89,10 @@ viewDrink onIncrementClick onDecrementClick drink =
     div [ class "meals__container gap-md mb-md" ]
         [ div [ class "meals__card p-sm border-radius-sm" ]
             [ div [ class "font-size-lg" ] [ text drink.name ]
-            , div [ class "font-size-sm" ] [ text (Round.floor 2 drink.price ++ "zł") ]
+            , div [ class "font-size-sm" ] [ text (Round.floor 2 drink.price) ]
             ]
-        , button [ class "p-none", onClick (onDecrementClick drink.id) ] [ text "-" ]
-        , button [ class "p-none", onClick (onIncrementClick drink.id) ] [ text "+" ]
+        , button [ class "button p-none", onClick (onDecrementClick drink.id) ] [ text "-" ]
+        , button [ class "button p-none", onClick (onIncrementClick drink.id) ] [ text "+" ]
         ]
 
 
