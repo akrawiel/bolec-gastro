@@ -33,6 +33,16 @@ $sizes-values:
     margin: nth($sizes-values, $index) nth($sizes-values, $index);
   }
 
+  .py-#{nth($sizes-names, $index)} {
+    padding-bottom: nth($sizes-values, $index);
+    padding-top: nth($sizes-values, $index);
+  }
+
+  .px-#{nth($sizes-names, $index)} {
+    padding-left: nth($sizes-values, $index);
+    padding-right: nth($sizes-values, $index);
+  }
+
   .p-#{nth($sizes-names, $index)} {
     padding: nth($sizes-values, $index) nth($sizes-values, $index);
   }
