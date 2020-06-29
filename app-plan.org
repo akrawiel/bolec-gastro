@@ -3,9 +3,11 @@
   - [-] meals/drinks database (json-server)
         - [X] server setup
         - [ ] CRUD interface
-  - [ ] orders
-        - [ ] meals/drinks list
-        - [ ] meals/drinks ordering
+  - [-] orders
+        - [X] meals list
+        - [X] meals ordering
+        - [ ] drinks list
+        - [ ] drinks ordering
         - [ ] payment handling (offline only)
         - [ ] tips
   - [ ] application appearance
