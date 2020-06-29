@@ -22,16 +22,20 @@ import Round
 -- TYPES
 
 
+type alias Countable a =
+    { a | count : Int }
+
+
 type alias OrderMeal =
-    { meal : Meal
-    , count : Int
-    }
+    Countable { meal : Meal }
 
 
 type alias OrderDrink =
-    { drink : Drink
-    , count : Int
-    }
+    Countable { drink : Drink }
+
+
+type alias Indexable a =
+    { a | id : Int }
 
 
 type OrderPaymentType
@@ -107,40 +111,72 @@ updateMealCount mealId increment orderMeal =
 
 
 updateDrinkCount : Int -> Int -> OrderDrink -> OrderDrink
-updateDrinkCount mealId increment orderDrink =
-    if orderDrink.drink.id == mealId then
+updateDrinkCount drinkId increment orderDrink =
+    if orderDrink.drink.id == drinkId then
         { orderDrink | count = Basics.max 0 (orderDrink.count + increment) }
 
     else
         orderDrink
 
 
-findMeal : Int -> Meal -> Maybe Meal -> Maybe Meal
-findMeal mealId meal currentOutput =
-    if meal.id == mealId then
-        Just meal
+findEntity : Int -> Indexable a -> Maybe (Indexable a) -> Maybe (Indexable a)
+findEntity entityId entity currentOutput =
+    if entity.id == entityId then
+        Just entity
 
     else
         currentOutput
 
 
-findDrink : Int -> Drink -> Maybe Drink -> Maybe Drink
-findDrink drinkId drink currentOutput =
-    if drink.id == drinkId then
-        Just drink
-
-    else
-        currentOutput
+filterEmptyOrderEntities : Countable a -> Bool
+filterEmptyOrderEntities { count } =
+    count > 0
 
 
-filterEmptyOrderMeals : OrderMeal -> Bool
-filterEmptyOrderMeals orderMeal =
-    orderMeal.count > 0
+newOrderMealConstructor : Meal -> OrderMeal
+newOrderMealConstructor meal =
+    { count = 1
+    , meal = meal
+    }
 
 
-filterEmptyOrderDrinks : OrderDrink -> Bool
-filterEmptyOrderDrinks orderMeal =
-    orderMeal.count > 0
+newOrderDrinkConstructor : Drink -> OrderDrink
+newOrderDrinkConstructor drink =
+    { count = 1
+    , drink = drink
+    }
+
+
+decrementOrderEntities :
+    (Int -> Int -> Countable a -> Countable a)
+    -> Int
+    -> List (Countable a)
+    -> List (Countable a)
+decrementOrderEntities updateMethod entityId countables =
+    countables
+        |> List.map (updateMethod entityId -1)
+        |> List.filter filterEmptyOrderEntities
+
+
+incrementOrderEntities :
+    (Int -> Int -> Countable a -> Countable a)
+    -> Int
+    -> Array (Indexable b)
+    -> (Countable a -> Int)
+    -> (Indexable b -> Countable a)
+    -> List (Countable a)
+    -> List (Countable a)
+incrementOrderEntities updateMethod entityId indexables idGetter entityConstructor countables =
+    case
+        List.filter (\entity -> idGetter entity == entityId) countables
+    of
+        [] ->
+            Array.foldl (findEntity entityId) Nothing indexables
+                |> Maybe.map (\entity -> countables ++ [ entityConstructor entity ])
+                |> Maybe.withDefault countables
+
+        _ ->
+            List.map (updateMethod entityId 1) countables
 
 
 updateOrder : OrderMealChange -> Array Meal -> Array Drink -> Order -> Order
@@ -149,57 +185,33 @@ updateOrder msg allMeals allDrinks order =
         OrderMealIncrement entityId ->
             { order
                 | meals =
-                    if
-                        List.isEmpty
-                            (List.filter (\orderMeal -> orderMeal.meal.id == entityId)
-                                order.meals
-                            )
-                    then
-                        case Array.foldl (findMeal entityId) Nothing allMeals of
-                            Just meal ->
-                                order.meals ++ [ { count = 1, meal = meal } ]
-
-                            Nothing ->
-                                order.meals
-
-                    else
-                        List.map (updateMealCount entityId 1) order.meals
+                    incrementOrderEntities updateMealCount
+                        entityId
+                        allMeals
+                        (.meal >> .id)
+                        newOrderMealConstructor
+                        order.meals
             }
 
         OrderMealDecrement entityId ->
             { order
-                | meals =
-                    order.meals
-                        |> List.map (updateMealCount entityId -1)
-                        |> List.filter filterEmptyOrderMeals
+                | meals = decrementOrderEntities updateMealCount entityId order.meals
             }
 
         OrderDrinkIncrement entityId ->
             { order
                 | drinks =
-                    if
-                        List.isEmpty
-                            (List.filter (\orderDrink -> orderDrink.drink.id == entityId)
-                                order.drinks
-                            )
-                    then
-                        case Array.foldl (findDrink entityId) Nothing allDrinks of
-                            Just drink ->
-                                order.drinks ++ [ { count = 1, drink = drink } ]
-
-                            Nothing ->
-                                order.drinks
-
-                    else
-                        List.map (updateDrinkCount entityId 1) order.drinks
+                    incrementOrderEntities updateDrinkCount
+                        entityId
+                        allDrinks
+                        (.drink >> .id)
+                        newOrderDrinkConstructor
+                        order.drinks
             }
 
         OrderDrinkDecrement entityId ->
             { order
-                | drinks =
-                    order.drinks
-                        |> List.map (updateDrinkCount entityId -1)
-                        |> List.filter filterEmptyOrderDrinks
+                | drinks = decrementOrderEntities updateDrinkCount entityId order.drinks
             }
 
 
@@ -207,21 +219,31 @@ updateOrder msg allMeals allDrinks order =
 -- VIEW
 
 
-viewOrderMeal : OrderMeal -> Html msg
-viewOrderMeal { meal, count } =
+viewCountable : { count : Int, name : String, price : Float, totalPrice : Float } -> Html msg
+viewCountable { count, name, price, totalPrice } =
     div [ class "flex mb-xs" ]
-        [ div [ class "font-size-md" ] [ text meal.name ]
+        [ div [ class "font-size-md" ] [ text name ]
         , div [ class "flex-1 leaders mx-xs my-xs" ] []
         , div [ class "font-size-md" ]
             [ text
                 (String.fromInt count
                     ++ " * "
-                    ++ Round.floor 2 meal.price
+                    ++ Round.floor 2 price
                     ++ " = "
-                    ++ Round.floor 2 (totalMealPayment { meal = meal, count = count })
+                    ++ Round.floor 2 totalPrice
                 )
             ]
         ]
+
+
+viewOrderMeal : OrderMeal -> Html msg
+viewOrderMeal { meal, count } =
+    viewCountable
+        { count = count
+        , name = meal.name
+        , price = meal.price
+        , totalPrice = totalMealPayment { meal = meal, count = count }
+        }
 
 
 viewKeyedOrderMeals : OrderMeal -> ( String, Html msg )
@@ -231,19 +253,12 @@ viewKeyedOrderMeals orderMeal =
 
 viewOrderDrink : OrderDrink -> Html msg
 viewOrderDrink { drink, count } =
-    div [ class "flex mb-xs" ]
-        [ div [ class "font-size-md" ] [ text drink.name ]
-        , div [ class "flex-1 leaders mx-xs my-xs" ] []
-        , div [ class "font-size-md" ]
-            [ text
-                (String.fromInt count
-                    ++ " * "
-                    ++ Round.floor 2 drink.price
-                    ++ " = "
-                    ++ Round.floor 2 (totalDrinkPayment { drink = drink, count = count })
-                )
-            ]
-        ]
+    viewCountable
+        { count = count
+        , name = drink.name
+        , price = drink.price
+        , totalPrice = totalDrinkPayment { drink = drink, count = count }
+        }
 
 
 viewKeyedOrderDrinks : OrderDrink -> ( String, Html msg )
