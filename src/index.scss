@@ -110,3 +110,16 @@ body {
 .text-right {
   text-align: right;
 }
+
+.leaders {
+  border-bottom: 3px dotted $light;
+}
+
+hr {
+  background-color: $light;
+  border: 0;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}

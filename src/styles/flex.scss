@@ -5,6 +5,10 @@
     flex-direction: row;
   }
 
+  &.column {
+    flex-direction: column;
+  }
+
   &.align-center {
     align-items: center;
   }
@@ -16,4 +20,8 @@
   &.justify-between {
     justify-content: space-between;
   }
+}
+
+.flex-1 {
+  flex: 1;
 }
