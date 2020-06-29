@@ -1,7 +1,7 @@
 module Entities.Meal exposing (Meal, MealRequestMethods, MealRequestMsg, getMealRequester, updateMeals, viewMeals)
 
 import Array exposing (Array)
-import Html exposing (Attribute, Html, button, div, text)
+import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Html.Keyed as Keyed
@@ -101,10 +101,10 @@ viewKeyedMeals onIncrementClick onDecrementClick meal =
 
 viewMeals : (Int -> msg) -> (Int -> msg) -> Array Meal -> Html msg
 viewMeals onIncrementClick onDecrementClick meals =
-    div [ class "flex flex-1 column" ]
+    div [ class "flex column" ]
         [ div [ class "mb-sm font-size-lg text-center" ] [ text "Meals" ]
         , Keyed.node "div"
-            [ class "flex-1" ]
+            []
             (meals
                 |> Array.toList
                 |> List.sortBy .name

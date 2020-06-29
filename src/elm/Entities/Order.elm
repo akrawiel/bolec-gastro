@@ -9,6 +9,7 @@ module Entities.Order exposing
     )
 
 import Array exposing (Array)
+import Entities.Drink exposing (Drink)
 import Entities.Meal exposing (Meal)
 import Html exposing (Html, div, hr, text)
 import Html.Attributes exposing (class)
@@ -27,6 +28,12 @@ type alias OrderMeal =
     }
 
 
+type alias OrderDrink =
+    { drink : Drink
+    , count : Int
+    }
+
+
 type OrderPaymentType
     = Card
     | Cash
@@ -35,6 +42,7 @@ type OrderPaymentType
 
 type alias Order =
     { meals : List OrderMeal
+    , drinks : List OrderDrink
     , paymentType : Maybe OrderPaymentType
     }
 
@@ -42,6 +50,8 @@ type alias Order =
 type OrderMealChange
     = OrderMealDecrement Int
     | OrderMealIncrement Int
+    | OrderDrinkDecrement Int
+    | OrderDrinkIncrement Int
 
 
 
@@ -50,7 +60,7 @@ type OrderMealChange
 
 empty : Order
 empty =
-    Order [] Nothing
+    Order [] [] Nothing
 
 
 
@@ -62,14 +72,25 @@ totalMealPayment { count, meal } =
     toFloat count * meal.price
 
 
-totalPaymentFold : OrderMeal -> Float -> Float
-totalPaymentFold orderMeal accumulatedPrice =
+totalMealPaymentFold : OrderMeal -> Float -> Float
+totalMealPaymentFold orderMeal accumulatedPrice =
     accumulatedPrice + totalMealPayment orderMeal
 
 
+totalDrinkPayment : OrderDrink -> Float
+totalDrinkPayment { count, drink } =
+    toFloat count * drink.price
+
+
+totalDrinkPaymentFold : OrderDrink -> Float -> Float
+totalDrinkPaymentFold orderDrink accumulatedPrice =
+    accumulatedPrice + totalDrinkPayment orderDrink
+
+
 totalPayment : Order -> Float
-totalPayment { meals } =
-    List.foldl totalPaymentFold 0.0 meals
+totalPayment { meals, drinks } =
+    List.foldl totalMealPaymentFold 0.0 meals
+        + List.foldl totalDrinkPaymentFold 0.0 drinks
 
 
 
@@ -85,10 +106,28 @@ updateMealCount mealId increment orderMeal =
         orderMeal
 
 
+updateDrinkCount : Int -> Int -> OrderDrink -> OrderDrink
+updateDrinkCount mealId increment orderDrink =
+    if orderDrink.drink.id == mealId then
+        { orderDrink | count = Basics.max 0 (orderDrink.count + increment) }
+
+    else
+        orderDrink
+
+
 findMeal : Int -> Meal -> Maybe Meal -> Maybe Meal
 findMeal mealId meal currentOutput =
     if meal.id == mealId then
         Just meal
+
+    else
+        currentOutput
+
+
+findDrink : Int -> Drink -> Maybe Drink -> Maybe Drink
+findDrink drinkId drink currentOutput =
+    if drink.id == drinkId then
+        Just drink
 
     else
         currentOutput
@@ -99,19 +138,24 @@ filterEmptyOrderMeals orderMeal =
     orderMeal.count > 0
 
 
-updateOrder : OrderMealChange -> Array Meal -> Order -> Order
-updateOrder msg allMeals order =
+filterEmptyOrderDrinks : OrderDrink -> Bool
+filterEmptyOrderDrinks orderMeal =
+    orderMeal.count > 0
+
+
+updateOrder : OrderMealChange -> Array Meal -> Array Drink -> Order -> Order
+updateOrder msg allMeals allDrinks order =
     case msg of
-        OrderMealIncrement mealId ->
+        OrderMealIncrement entityId ->
             { order
                 | meals =
                     if
                         List.isEmpty
-                            (List.filter (\orderMeal -> orderMeal.meal.id == mealId)
+                            (List.filter (\orderMeal -> orderMeal.meal.id == entityId)
                                 order.meals
                             )
                     then
-                        case Array.foldl (findMeal mealId) Nothing allMeals of
+                        case Array.foldl (findMeal entityId) Nothing allMeals of
                             Just meal ->
                                 order.meals ++ [ { count = 1, meal = meal } ]
 
@@ -119,15 +163,43 @@ updateOrder msg allMeals order =
                                 order.meals
 
                     else
-                        List.map (updateMealCount mealId 1) order.meals
+                        List.map (updateMealCount entityId 1) order.meals
             }
 
-        OrderMealDecrement mealId ->
+        OrderMealDecrement entityId ->
             { order
                 | meals =
                     order.meals
-                        |> List.map (updateMealCount mealId -1)
+                        |> List.map (updateMealCount entityId -1)
                         |> List.filter filterEmptyOrderMeals
+            }
+
+        OrderDrinkIncrement entityId ->
+            { order
+                | drinks =
+                    if
+                        List.isEmpty
+                            (List.filter (\orderDrink -> orderDrink.drink.id == entityId)
+                                order.drinks
+                            )
+                    then
+                        case Array.foldl (findDrink entityId) Nothing allDrinks of
+                            Just drink ->
+                                order.drinks ++ [ { count = 1, drink = drink } ]
+
+                            Nothing ->
+                                order.drinks
+
+                    else
+                        List.map (updateDrinkCount entityId 1) order.drinks
+            }
+
+        OrderDrinkDecrement entityId ->
+            { order
+                | drinks =
+                    order.drinks
+                        |> List.map (updateDrinkCount entityId -1)
+                        |> List.filter filterEmptyOrderDrinks
             }
 
 
@@ -157,16 +229,44 @@ viewKeyedOrderMeals orderMeal =
     ( String.fromInt orderMeal.meal.id, lazy viewOrderMeal orderMeal )
 
 
+viewOrderDrink : OrderDrink -> Html msg
+viewOrderDrink { drink, count } =
+    div [ class "flex mb-xs" ]
+        [ div [ class "font-size-md" ] [ text drink.name ]
+        , div [ class "flex-1 leaders mx-xs my-xs" ] []
+        , div [ class "font-size-md" ]
+            [ text
+                (String.fromInt count
+                    ++ " * "
+                    ++ Round.floor 2 drink.price
+                    ++ " = "
+                    ++ Round.floor 2 (totalDrinkPayment { drink = drink, count = count })
+                )
+            ]
+        ]
+
+
+viewKeyedOrderDrinks : OrderDrink -> ( String, Html msg )
+viewKeyedOrderDrinks orderDrink =
+    ( String.fromInt orderDrink.drink.id, lazy viewOrderDrink orderDrink )
+
+
 viewOrder : Order -> Html msg
 viewOrder order =
     div []
         [ node "div"
-            [ class "mb-md" ]
+            []
             (order.meals
                 |> List.sortBy (.meal >> .name)
                 |> List.map viewKeyedOrderMeals
             )
-        , hr [ class "mb-md" ] []
+        , node "div"
+            []
+            (order.drinks
+                |> List.sortBy (.drink >> .name)
+                |> List.map viewKeyedOrderDrinks
+            )
+        , hr [ class "my-md" ] []
         , div [ class "flex justify-between mb-md font-size-lg" ]
             [ div [] [ text "Total payment: " ]
             , div [] [ text (Round.floor 2 (totalPayment order)) ]

@@ -3,7 +3,24 @@ module Main exposing (main)
 import Array exposing (Array)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Entities.Meal exposing (Meal, MealRequestMethods, MealRequestMsg, getMealRequester, updateMeals, viewMeals)
+import Entities.Drink
+    exposing
+        ( Drink
+        , DrinkRequestMethods
+        , DrinkRequestMsg
+        , getDrinkRequester
+        , updateDrinks
+        , viewDrinks
+        )
+import Entities.Meal
+    exposing
+        ( Meal
+        , MealRequestMethods
+        , MealRequestMsg
+        , getMealRequester
+        , updateMeals
+        , viewMeals
+        )
 import Entities.Order exposing (OrderMealChange(..), updateOrder, viewOrder)
 import Entities.Table exposing (Table, TableState(..), mapTableForIndex, viewTables)
 import Html exposing (..)
@@ -35,7 +52,9 @@ type alias Model =
     , selectedTable : Maybe Table
     , customersForTable : Int
     , meals : Array Meal
+    , drinks : Array Drink
     , mealRequester : MealRequestMethods
+    , drinkRequester : DrinkRequestMethods
     }
 
 
@@ -48,6 +67,7 @@ type Msg
     | ReserveTable Int Int
     | EmptyTable Int
     | MealMsg MealRequestMsg
+    | DrinkMsg DrinkRequestMsg
     | UpdateOrder OrderMealChange Table
 
 
@@ -60,6 +80,9 @@ init { apiUrl } url key =
     let
         mealRequester =
             getMealRequester apiUrl
+
+        drinkRequester =
+            getDrinkRequester apiUrl
     in
     ( { key = key
       , url = url
@@ -67,9 +90,14 @@ init { apiUrl } url key =
       , selectedTable = Nothing
       , customersForTable = 1
       , meals = Array.empty
+      , drinks = Array.empty
       , mealRequester = mealRequester
+      , drinkRequester = drinkRequester
       }
-    , Cmd.map MealMsg mealRequester.getAllMeals
+    , Cmd.batch
+        [ Cmd.map MealMsg mealRequester.getAllMeals
+        , Cmd.map DrinkMsg drinkRequester.getAllDrinks
+        ]
     )
 
 
@@ -140,12 +168,19 @@ update msg model =
             in
             ( { model | meals = meals }, Cmd.none )
 
+        DrinkMsg requestMessage ->
+            let
+                drinks =
+                    updateDrinks requestMessage model.drinks
+            in
+            ( { model | drinks = drinks }, Cmd.none )
+
         UpdateOrder orderMealChange table ->
             ( { model
                 | selectedTable =
                     Just
                         { table
-                            | order = updateOrder orderMealChange model.meals table.order
+                            | order = updateOrder orderMealChange model.meals model.drinks table.order
                         }
               }
             , Cmd.none
@@ -166,7 +201,7 @@ subscriptions _ =
 
 
 viewSidePanel : Model -> Html Msg
-viewSidePanel { customersForTable, selectedTable, meals } =
+viewSidePanel { customersForTable, selectedTable, meals, drinks } =
     aside [ class "side-panel" ]
         [ case selectedTable of
             Just table ->
@@ -205,10 +240,16 @@ viewSidePanel { customersForTable, selectedTable, meals } =
 
                         HasCustomers _ ->
                             div [ class "flex column flex-1" ]
-                                [ viewMeals
-                                    (\mealId -> UpdateOrder (OrderMealIncrement mealId) table)
-                                    (\mealId -> UpdateOrder (OrderMealDecrement mealId) table)
-                                    meals
+                                [ div [ class "flex-1" ]
+                                    [ viewMeals
+                                        (\mealId -> UpdateOrder (OrderMealIncrement mealId) table)
+                                        (\mealId -> UpdateOrder (OrderMealDecrement mealId) table)
+                                        meals
+                                    , viewDrinks
+                                        (\drinkId -> UpdateOrder (OrderDrinkIncrement drinkId) table)
+                                        (\drinkId -> UpdateOrder (OrderDrinkDecrement drinkId) table)
+                                        drinks
+                                    ]
                                 , viewOrder table.order
                                 , button [ class "button width-full mb-sm", onClick (EmptyTable table.id) ] [ text "Empty table" ]
                                 ]
