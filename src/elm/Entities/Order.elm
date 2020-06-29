@@ -111,11 +111,7 @@ updateOrder msg allMeals order =
                                 order.meals
                             )
                     then
-                        let
-                            foundMeal =
-                                Array.foldl (findMeal mealId) Nothing allMeals
-                        in
-                        case foundMeal of
+                        case Array.foldl (findMeal mealId) Nothing allMeals of
                             Just meal ->
                                 order.meals ++ [ { count = 1, meal = meal } ]
 
