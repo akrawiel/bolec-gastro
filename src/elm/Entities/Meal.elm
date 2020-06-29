@@ -101,15 +101,16 @@ viewKeyedMeals onIncrementClick onDecrementClick meal =
 
 viewMeals : (Int -> msg) -> (Int -> msg) -> Array Meal -> Html msg
 viewMeals onIncrementClick onDecrementClick meals =
-    div []
+    div [ class "flex flex-1 column" ]
         [ div [ class "mb-sm font-size-lg text-center" ] [ text "Meals" ]
         , Keyed.node "div"
-            []
-            (Array.toList <|
-                Array.map
+            [ class "flex-1" ]
+            (meals
+                |> Array.toList
+                |> List.sortBy .name
+                |> List.map
                     (viewKeyedMeals onIncrementClick
                         onDecrementClick
                     )
-                    meals
             )
         ]
