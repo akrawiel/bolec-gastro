@@ -6,8 +6,8 @@
   - [-] orders
         - [X] meals list
         - [X] meals ordering
-        - [ ] drinks list
-        - [ ] drinks ordering
+        - [X] drinks list
+        - [X] drinks ordering
         - [ ] payment handling (offline only)
         - [ ] tips
   - [ ] application appearance
