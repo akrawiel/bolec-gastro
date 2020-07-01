@@ -61,6 +61,8 @@ type alias Model =
     , currentlyEditedName : String
     , currentlyEditedPrice : String
     , currentlyEditedVolume : String
+    , addingMeal : Bool
+    , addingDrink : Bool
     }
 
 
@@ -106,6 +108,8 @@ init { apiUrl } url key =
       , currentlyEditedName = ""
       , currentlyEditedPrice = ""
       , currentlyEditedVolume = ""
+      , addingMeal = False
+      , addingDrink = False
       }
     , Cmd.batch
         [ Cmd.map MealMsg mealRequester.getAllMeals

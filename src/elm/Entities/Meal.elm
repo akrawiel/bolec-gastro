@@ -1,4 +1,13 @@
-module Entities.Meal exposing (Meal, MealRequestMethods, MealRequestMsg, getMealRequester, updateMeals, viewMeals)
+module Entities.Meal exposing
+    ( Meal
+    , MealRequestMethods
+    , MealRequestMsg
+    , getMealRequester
+    , mealArrayDecoder
+    , mealDecoder
+    , updateMeals
+    , viewMeals
+    )
 
 import Array exposing (Array)
 import Html exposing (Html, button, div, text)
@@ -9,7 +18,6 @@ import Html.Lazy exposing (lazy3)
 import Http
 import Json.Decode exposing (Decoder, array, float, int, string, succeed)
 import Json.Decode.Pipeline exposing (required)
-import Json.Encode as Encode
 import Round
 
 
@@ -37,14 +45,17 @@ type MealRequestMsg
 -- JSON DECODERS
 
 
-mealDecoder : Decoder (Array Meal)
+mealDecoder : Decoder Meal
 mealDecoder =
-    array
-        (succeed Meal
-            |> required "id" int
-            |> required "name" string
-            |> required "price" float
-        )
+    succeed Meal
+        |> required "id" int
+        |> required "name" string
+        |> required "price" float
+
+
+mealArrayDecoder : Decoder (Array Meal)
+mealArrayDecoder =
+    array mealDecoder
 
 
 
@@ -59,7 +70,7 @@ getMealRequester apiUrl =
             , headers =
                 [ Http.header "Access-Control-Allow-Origin" "*"
                 ]
-            , expect = Http.expectJson GotAllMealsResponse mealDecoder
+            , expect = Http.expectJson GotAllMealsResponse mealArrayDecoder
             , method = "GET"
             , timeout = Nothing
             , tracker = Nothing
