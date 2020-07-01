@@ -42,6 +42,8 @@ type Msg
     | SetAddingMeal
     | AddMeal NewMeal
     | MealAdded (Result Http.Error Meal)
+    | RemoveMeal Meal
+    | MealRemoved Int (Result Http.Error ())
 
 
 type alias Model a =
@@ -118,6 +120,27 @@ addMealRequest { apiUrl } newMeal =
                     ]
                 )
         }
+
+
+removeMealRequest : Model a -> Meal -> Cmd Msg
+removeMealRequest { apiUrl } { id } =
+    Http.request
+        { url = apiUrl ++ "/meals/" ++ String.fromInt id
+        , headers =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
+        , expect = Http.expectWhatever (MealRemoved id)
+        , method = "DELETE"
+        , timeout = Nothing
+        , tracker = Nothing
+        , body =
+            Http.emptyBody
+        }
+
+
+filterExistingMeals : Int -> Array Meal -> Array Meal
+filterExistingMeals removedId meals =
+    Array.filter (\meal -> meal.id /= removedId) meals
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -217,6 +240,36 @@ update msg model =
                       }
                     , Cmd.none
                     )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
+        RemoveMeal meal ->
+            ( model, removeMealRequest model meal )
+
+        MealRemoved removedId response ->
+            case response of
+                Ok _ ->
+                    case model.currentlyEditedMeal of
+                        Just editedMeal ->
+                            ( { model
+                                | meals = model.meals |> filterExistingMeals removedId
+                                , currentlyEditedMeal =
+                                    if editedMeal.id == removedId then
+                                        Nothing
+
+                                    else
+                                        Just editedMeal
+                              }
+                            , Cmd.none
+                            )
+
+                        Nothing ->
+                            ( { model
+                                | meals = model.meals |> filterExistingMeals removedId
+                              }
+                            , Cmd.none
+                            )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -322,6 +375,7 @@ viewMeal meal =
         , div [ class "leaders flex-1 height-sm mx-xs" ] []
         , div [] [ text (Round.floor 2 meal.price) ]
         , button [ class "button ml-sm", onClick (ChangeEditedMeal (Just meal)) ] [ text "Edit" ]
+        , button [ class "button ml-sm", onClick (RemoveMeal meal) ] [ text "×" ]
         ]
 
 
