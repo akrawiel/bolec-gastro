@@ -270,7 +270,7 @@ viewOrder : Order -> Html msg
 viewOrder order =
     div []
         [ node "div"
-            []
+            [ class "mt-sm" ]
             (order.meals
                 |> List.sortBy (.meal >> .name)
                 |> List.map viewKeyedOrderMeals
@@ -281,7 +281,7 @@ viewOrder order =
                 |> List.sortBy (.drink >> .name)
                 |> List.map viewKeyedOrderDrinks
             )
-        , hr [ class "my-md" ] []
+        , hr [ class "my-sm" ] []
         , div [ class "flex justify-between mb-md font-size-lg" ]
             [ div [] [ text "Total payment: " ]
             , div [] [ text (Round.floor 2 (totalPayment order)) ]

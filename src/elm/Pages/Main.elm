@@ -110,7 +110,7 @@ viewSidePanel { customersForTable, selectedTable, meals, drinks } =
             ]
         , case selectedTable of
             Just table ->
-                div [ class "table-settings-container font-size-xl flex column flex-1" ]
+                div [ class "table-settings-container font-size-xl flex column flex-1 overflow-y-hidden" ]
                     [ div [ class "mb-lg text-center" ] [ text table.name ]
                     , case table.state of
                         Empty ->
@@ -144,8 +144,8 @@ viewSidePanel { customersForTable, selectedTable, meals, drinks } =
                                 ]
 
                         HasCustomers _ ->
-                            div [ class "flex column flex-1" ]
-                                [ div [ class "flex-1" ]
+                            div [ class "flex column flex-1 overflow-y-hidden" ]
+                                [ div [ class "flex-1 overflow-y-auto" ]
                                     [ viewMeals
                                         (\mealId -> UpdateOrder (OrderMealIncrement mealId) table)
                                         (\mealId -> UpdateOrder (OrderMealDecrement mealId) table)

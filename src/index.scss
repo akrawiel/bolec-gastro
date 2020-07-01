@@ -68,8 +68,10 @@ body {
 .side-panel {
   background-color: $secondary;
   color: $light;
-  justify-content: center;
   flex: 1;
+  height: 100vh;
+  justify-content: center;
+  overflow-y: hidden;
 }
 
 .app-container {
@@ -123,6 +125,14 @@ body {
 
 .sizing-border {
   box-sizing: border-box;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.overflow-y-hidden {
+  overflow-y: hidden;
 }
 
 hr {
