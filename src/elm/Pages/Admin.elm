@@ -78,21 +78,21 @@ viewEditedEntry model =
             Html.map DrinksUpdateMsg (viewAddOrEditDrink model)
 
         _ ->
-            div [ class "flex-1 color-light font-size-xl text-center pl-md" ] [ text "No entry selected" ]
+            div [ class "flex-1 color-light font-size-xl text-center" ] [ text "No entry selected" ]
 
 
 view : Model a -> Html Msg
 view model =
-    div [ class "bg-secondary height-full py-md px-md sizing-border" ]
-        [ div [ class "mb-md flex justify-between" ]
+    div [ class "bg-secondary min-height-full sizing-border" ]
+        [ div [ class "mb-md flex justify-between p-md" ]
             [ div [ class "font-size-xl font-weight-700 color-light" ]
                 [ text "Bolec Gastro" ]
             , a
                 [ class "button font-size-lg", href "/" ]
                 [ text "Home" ]
             ]
-        , div [ class "flex row" ]
-            [ div [ class "flex-1" ]
+        , div [ class "flex admin-entries-container" ]
+            [ div [ class "flex-1 p-md" ]
                 [ Html.map MealsUpdateMsg (viewMeals model.meals)
                 , Html.map DrinksUpdateMsg (viewDrinks model.drinks)
                 ]

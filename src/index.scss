@@ -50,6 +50,14 @@ body {
   }
 }
 
+.admin-entries-container {
+  flex-direction: column;
+
+  @include landscape {
+    flex-direction: row;
+  }
+}
+
 .table-grid {
   box-sizing: border-box;
   display: grid;
@@ -157,6 +165,10 @@ body {
 
 .height-full {
   height: 100%;
+}
+
+.min-height-full {
+  min-height: 100%;
 }
 
 .height-sm {

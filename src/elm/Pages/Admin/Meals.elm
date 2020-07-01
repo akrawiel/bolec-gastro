@@ -301,7 +301,7 @@ viewMealForm onMealSubmit { addingMeal, currentlyEditedName, currentlyEditedPric
             , currentlyEditedPrice = currentlyEditedPrice
             }
     in
-    div [ class "flex-1 pl-md" ]
+    div [ class "flex-1 p-md" ]
         [ form [ class "color-light font-size-lg", onSubmit (onMealSubmit meal) ]
             [ div [ class "mb-md" ]
                 [ span []

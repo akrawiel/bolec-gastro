@@ -49,6 +49,10 @@ $sizes-values:
     padding-left: nth($sizes-values, $index);
   }
 
+  .pr-#{nth($sizes-names, $index)} {
+    padding-right: nth($sizes-values, $index);
+  }
+
   .py-#{nth($sizes-names, $index)} {
     padding-bottom: nth($sizes-values, $index);
     padding-top: nth($sizes-values, $index);
