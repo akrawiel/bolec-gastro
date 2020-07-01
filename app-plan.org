@@ -1,8 +1,8 @@
 * TODO list
   - [X] tables reservation
-  - [-] meals/drinks database (json-server)
+  - [X] meals/drinks database (json-server)
         - [X] server setup
-        - [ ] CRUD interface
+        - [X] CRUD interface
   - [-] orders
         - [X] meals list
         - [X] meals ordering
