@@ -58,6 +58,9 @@ type alias Model =
     , drinkRequester : DrinkRequestMethods
     , currentlyEditedMeal : Maybe Meal
     , currentlyEditedDrink : Maybe Drink
+    , currentlyEditedName : String
+    , currentlyEditedPrice : String
+    , currentlyEditedVolume : String
     }
 
 
@@ -100,6 +103,9 @@ init { apiUrl } url key =
       , drinkRequester = drinkRequester
       , currentlyEditedDrink = Nothing
       , currentlyEditedMeal = Nothing
+      , currentlyEditedName = ""
+      , currentlyEditedPrice = ""
+      , currentlyEditedVolume = ""
       }
     , Cmd.batch
         [ Cmd.map MealMsg mealRequester.getAllMeals

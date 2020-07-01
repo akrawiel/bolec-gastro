@@ -19,6 +19,10 @@ $sizes-values:
     margin-bottom: nth($sizes-values, $index);
   }
 
+  .mt-#{nth($sizes-names, $index)} {
+    margin-top: nth($sizes-values, $index);
+  }
+
   .ml-#{nth($sizes-names, $index)} {
     margin-left: nth($sizes-values, $index);
   }
