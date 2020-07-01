@@ -27,6 +27,10 @@ $sizes-values:
     margin-left: nth($sizes-values, $index);
   }
 
+  .mr-#{nth($sizes-names, $index)} {
+    margin-right: nth($sizes-values, $index);
+  }
+
   .mx-#{nth($sizes-names, $index)} {
     margin-left: nth($sizes-values, $index);
     margin-right: nth($sizes-values, $index);

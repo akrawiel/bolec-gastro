@@ -131,15 +131,16 @@ viewSidePanel { customersForTable, selectedTable, meals, drinks } =
                                         ]
                                         [ text "+" ]
                                     ]
-                                , div [ class "mb-sm" ]
+                                , div
+                                    [ class "flex row" ]
                                     [ button
-                                        [ class "button width-full"
+                                        [ class "button width-full mr-xs"
                                         , onClick
-                                            (ReserveTable table.id
-                                                customersForTable
-                                            )
+                                            (ReserveTable table.id customersForTable)
                                         ]
                                         [ text "Reserve table" ]
+                                    , button [ class "button width-full ml-xs", onClick (ChangeSelectedTable Nothing) ]
+                                        [ text "Cancel" ]
                                     ]
                                 ]
 
@@ -156,12 +157,13 @@ viewSidePanel { customersForTable, selectedTable, meals, drinks } =
                                         drinks
                                     ]
                                 , viewOrder table.order
-                                , button [ class "button width-full mb-sm", onClick (EmptyTable table.id) ] [ text "Empty table" ]
+                                , div
+                                    [ class "flex row" ]
+                                    [ button [ class "button width-full mr-xs", onClick (EmptyTable table.id) ] [ text "Empty table" ]
+                                    , button [ class "button width-full ml-xs", onClick (ChangeSelectedTable Nothing) ]
+                                        [ text "Cancel" ]
+                                    ]
                                 ]
-                    , div []
-                        [ button [ class "button width-full", onClick (ChangeSelectedTable Nothing) ]
-                            [ text "Cancel" ]
-                        ]
                     ]
 
             Nothing ->
@@ -171,7 +173,7 @@ viewSidePanel { customersForTable, selectedTable, meals, drinks } =
 
 view : Model a -> Html Msg
 view model =
-    div [ class "flex row width-full" ]
+    div [ class "flex width-full main-container" ]
         [ viewTables (\table -> ChangeSelectedTable (Just table)) model.tables
         , viewSidePanel model
         ]
