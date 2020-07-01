@@ -1,4 +1,13 @@
-module Entities.Drink exposing (Drink, DrinkRequestMethods, DrinkRequestMsg, getDrinkRequester, updateDrinks, viewDrinks)
+module Entities.Drink exposing
+    ( Drink
+    , DrinkRequestMethods
+    , DrinkRequestMsg
+    , drinkArrayDecoder
+    , drinkDecoder
+    , getDrinkRequester
+    , updateDrinks
+    , viewDrinks
+    )
 
 import Array exposing (Array)
 import Html exposing (Attribute, Html, button, div, text)
@@ -37,15 +46,18 @@ type DrinkRequestMsg
 -- JSON DECODERS
 
 
-drinkDecoder : Decoder (Array Drink)
+drinkDecoder : Decoder Drink
 drinkDecoder =
-    array
-        (succeed Drink
-            |> required "id" int
-            |> required "name" string
-            |> required "price" float
-            |> required "volume" int
-        )
+    succeed Drink
+        |> required "id" int
+        |> required "name" string
+        |> required "price" float
+        |> required "volume" int
+
+
+drinkArrayDecoder : Decoder (Array Drink)
+drinkArrayDecoder =
+    array drinkDecoder
 
 
 
@@ -60,7 +72,7 @@ getDrinkRequester apiUrl =
             , headers =
                 [ Http.header "Access-Control-Allow-Origin" "*"
                 ]
-            , expect = Http.expectJson GotAllDrinksResponse drinkDecoder
+            , expect = Http.expectJson GotAllDrinksResponse drinkArrayDecoder
             , method = "GET"
             , timeout = Nothing
             , tracker = Nothing

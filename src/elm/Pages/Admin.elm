@@ -1,7 +1,7 @@
 module Pages.Admin exposing (Msg, update, view)
 
 import Array exposing (Array)
-import Entities.Drink exposing (Drink)
+import Entities.Drink exposing (Drink, drinkDecoder)
 import Entities.Meal exposing (Meal, MealRequestMethods, mealDecoder)
 import Html exposing (Html, a, b, button, div, form, input, label, span, text)
 import Html.Attributes as Attr exposing (class, for, href, name, required, step, type_, value)
@@ -50,6 +50,18 @@ type alias NewMeal =
     MealExtendable {}
 
 
+type alias DrinkExtendable a =
+    { a
+        | name : String
+        , price : Float
+        , volume : Int
+    }
+
+
+type alias NewDrink =
+    DrinkExtendable {}
+
+
 type Msg
     = ChangeEditedMeal (Maybe Meal)
     | ChangeEditedDrink (Maybe Drink)
@@ -58,6 +70,9 @@ type Msg
     | MealUpdated (Result Http.Error String)
     | UpdateDrink Drink
     | DrinkUpdated (Result Http.Error String)
+    | SetAddingDrink
+    | AddDrink NewDrink
+    | DrinkAdded (Result Http.Error Drink)
     | SetAddingMeal
     | AddMeal NewMeal
     | MealAdded (Result Http.Error Meal)
@@ -161,6 +176,28 @@ addMealRequest { apiUrl } newMeal =
         }
 
 
+addDrinkRequest : Model a -> NewDrink -> Cmd Msg
+addDrinkRequest { apiUrl } newDrink =
+    Http.request
+        { url = apiUrl ++ "/drinks"
+        , headers =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
+        , expect = Http.expectJson DrinkAdded drinkDecoder
+        , method = "POST"
+        , timeout = Nothing
+        , tracker = Nothing
+        , body =
+            Http.jsonBody
+                (Encode.object
+                    [ ( "name", Encode.string newDrink.name )
+                    , ( "price", Encode.float newDrink.price )
+                    , ( "volume", Encode.int newDrink.volume )
+                    ]
+                )
+        }
+
+
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
@@ -256,6 +293,59 @@ update msg model =
             , Cmd.none
             )
 
+        SetAddingDrink ->
+            ( { model
+                | currentlyEditedDrink = Nothing
+                , currentlyEditedMeal = Nothing
+                , addingDrink = True
+                , addingMeal = False
+                , currentlyEditedName = ""
+                , currentlyEditedPrice = ""
+              }
+            , Cmd.none
+            )
+
+        AddDrink addedDrink ->
+            let
+                newDrink =
+                    case
+                        ( model.currentlyEditedName
+                        , model.currentlyEditedPrice |> String.toFloat
+                        , model.currentlyEditedVolume |> String.toInt
+                        )
+                    of
+                        ( name, Just price, Just volume ) ->
+                            Just
+                                { addedDrink
+                                    | name = name
+                                    , price = price
+                                    , volume = volume
+                                }
+
+                        _ ->
+                            Nothing
+            in
+            case newDrink of
+                Just drink ->
+                    ( model, addDrinkRequest model drink )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        DrinkAdded response ->
+            case response of
+                Ok drink ->
+                    ( { model
+                        | drinks = Array.push drink model.drinks
+                        , currentlyEditedDrink = Just drink
+                        , addingDrink = False
+                      }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
         SetAddingMeal ->
             ( { model
                 | currentlyEditedMeal = Nothing
@@ -268,7 +358,7 @@ update msg model =
             , Cmd.none
             )
 
-        AddMeal _ ->
+        AddMeal addedMeal ->
             let
                 newMeal =
                     case
@@ -278,8 +368,9 @@ update msg model =
                     of
                         ( name, Just price ) ->
                             Just
-                                { name = name
-                                , price = price
+                                { addedMeal
+                                    | name = name
+                                    , price = price
                                 }
 
                         _ ->
@@ -326,8 +417,8 @@ changeEditedVolume editedEntity value =
     ChangeEditedEntity { editedEntity | currentlyEditedVolume = value }
 
 
-viewEditedDrink : (Drink -> Msg) -> Model a -> Drink -> Html Msg
-viewEditedDrink onDrinkSubmit { currentlyEditedName, currentlyEditedPrice, currentlyEditedVolume } drink =
+viewEditedDrink : (DrinkExtendable b -> Msg) -> Model a -> DrinkExtendable b -> Html Msg
+viewEditedDrink onDrinkSubmit { currentlyEditedName, currentlyEditedPrice, currentlyEditedVolume, addingDrink } drink =
     let
         editedEntity =
             { currentlyEditedName = currentlyEditedName
@@ -339,7 +430,14 @@ viewEditedDrink onDrinkSubmit { currentlyEditedName, currentlyEditedPrice, curre
         [ form [ class "color-light font-size-lg", onSubmit (onDrinkSubmit drink) ]
             [ div [ class "mb-md" ]
                 [ span []
-                    [ text "Editing " ]
+                    [ text
+                        (if addingDrink then
+                            "Adding "
+
+                         else
+                            "Editing "
+                        )
+                    ]
                 , case drink.name of
                     "" ->
                         span [] [ text "drink" ]
@@ -461,18 +559,23 @@ viewEditedMeal onMealSubmit { addingMeal, currentlyEditedName, currentlyEditedPr
 
 viewEditedEntry : Model a -> Html Msg
 viewEditedEntry model =
-    case ( model.addingMeal, model.currentlyEditedMeal, model.currentlyEditedDrink ) of
-        ( True, _, _ ) ->
+    case ( model.addingMeal, model.addingDrink ) of
+        ( True, False ) ->
             viewEditedMeal AddMeal model { name = "", price = 0 }
 
-        ( False, Just meal, Nothing ) ->
-            viewEditedMeal UpdateMeal model meal
-
-        ( False, Nothing, Just drink ) ->
-            viewEditedDrink UpdateDrink model drink
+        ( False, True ) ->
+            viewEditedDrink AddDrink model { name = "", price = 0, volume = 0 }
 
         _ ->
-            div [ class "flex-1 color-light font-size-xl text-center pl-md" ] [ text "No entry selected" ]
+            case ( model.currentlyEditedMeal, model.currentlyEditedDrink ) of
+                ( Just meal, Nothing ) ->
+                    viewEditedMeal UpdateMeal model meal
+
+                ( Nothing, Just drink ) ->
+                    viewEditedDrink UpdateDrink model drink
+
+                _ ->
+                    div [ class "flex-1 color-light font-size-xl text-center pl-md" ] [ text "No entry selected" ]
 
 
 viewDrink : Drink -> Html Msg
@@ -501,6 +604,7 @@ viewDrinks drinks =
                 |> List.sortBy .name
                 |> List.map viewKeyedDrinks
             )
+        , button [ class "button width-full font-size-lg", onClick SetAddingDrink ] [ text "+ Add drink" ]
         ]
 
 
