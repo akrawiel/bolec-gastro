@@ -9,6 +9,7 @@ import Html.Lazy exposing (lazy3)
 import Http
 import Json.Decode exposing (Decoder, array, float, int, string, succeed)
 import Json.Decode.Pipeline exposing (required)
+import Json.Encode as Encode
 import Round
 
 
@@ -25,11 +26,13 @@ type alias Meal =
 
 type alias MealRequestMethods =
     { getAllMeals : Cmd MealRequestMsg
+    , updateMeal : Meal -> Cmd MealRequestMsg
     }
 
 
 type MealRequestMsg
     = GotAllMealsResponse (Result Http.Error (Array Meal))
+    | UpdatedMealResponse (Result Http.Error String)
 
 
 
@@ -50,6 +53,28 @@ mealDecoder =
 -- REQUESTS GENERATOR
 
 
+updateMeal : String -> Meal -> Cmd MealRequestMsg
+updateMeal apiUrl meal =
+    Http.request
+        { url = apiUrl ++ "/meals" ++ String.fromInt meal.id
+        , headers =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
+        , expect = Http.expectString UpdatedMealResponse
+        , method = "PUT"
+        , timeout = Nothing
+        , tracker = Nothing
+        , body =
+            Http.jsonBody
+                (Encode.object
+                    [ ( "id", Encode.int meal.id )
+                    , ( "name", Encode.string meal.name )
+                    , ( "price", Encode.float meal.price )
+                    ]
+                )
+        }
+
+
 getMealRequester : String -> MealRequestMethods
 getMealRequester apiUrl =
     { getAllMeals =
@@ -64,6 +89,7 @@ getMealRequester apiUrl =
             , tracker = Nothing
             , body = Http.emptyBody
             }
+    , updateMeal = updateMeal apiUrl
     }
 
 
@@ -76,6 +102,9 @@ updateMeals msg default =
     case msg of
         GotAllMealsResponse response ->
             Result.withDefault default response
+
+        UpdatedMealResponse _ ->
+            default
 
 
 

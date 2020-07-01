@@ -19,6 +19,10 @@ $sizes-values:
     margin-bottom: nth($sizes-values, $index);
   }
 
+  .ml-#{nth($sizes-names, $index)} {
+    margin-left: nth($sizes-values, $index);
+  }
+
   .mx-#{nth($sizes-names, $index)} {
     margin-left: nth($sizes-values, $index);
     margin-right: nth($sizes-values, $index);
@@ -31,6 +35,10 @@ $sizes-values:
 
   .m-#{nth($sizes-names, $index)} {
     margin: nth($sizes-values, $index) nth($sizes-values, $index);
+  }
+
+  .pl-#{nth($sizes-names, $index)} {
+    padding-left: nth($sizes-values, $index);
   }
 
   .py-#{nth($sizes-names, $index)} {

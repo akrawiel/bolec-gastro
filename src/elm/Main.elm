@@ -48,6 +48,7 @@ main =
 type alias Model =
     { key : Nav.Key
     , url : Url.Url
+    , apiUrl : String
     , tables : List Table
     , selectedTable : Maybe Table
     , customersForTable : Int
@@ -55,6 +56,8 @@ type alias Model =
     , drinks : Array Drink
     , mealRequester : MealRequestMethods
     , drinkRequester : DrinkRequestMethods
+    , currentlyEditedMeal : Maybe Meal
+    , currentlyEditedDrink : Maybe Drink
     }
 
 
@@ -87,6 +90,7 @@ init { apiUrl } url key =
     in
     ( { key = key
       , url = url
+      , apiUrl = apiUrl
       , tables = List.map mapTableForIndex (List.range 1 16)
       , selectedTable = Nothing
       , customersForTable = 1
@@ -94,6 +98,8 @@ init { apiUrl } url key =
       , drinks = Array.empty
       , mealRequester = mealRequester
       , drinkRequester = drinkRequester
+      , currentlyEditedDrink = Nothing
+      , currentlyEditedMeal = Nothing
       }
     , Cmd.batch
         [ Cmd.map MealMsg mealRequester.getAllMeals

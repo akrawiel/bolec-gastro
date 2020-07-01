@@ -3,3 +3,11 @@ $secondary: #4c8084;
 $primary: #92c9db;
 $light: #eef6f9;
 $error: #eb4011;
+
+.color-light {
+  color: $light;
+}
+
+.bg-secondary {
+  background-color: $secondary;
+}

@@ -109,12 +109,20 @@ body {
   height: 100%;
 }
 
-.color-light {
-  color: $light;
+.height-sm {
+  height: 0.5rem;
+}
+
+.height-md {
+  height: 1rem;
 }
 
 .leaders {
   border-bottom: 3px dotted $light;
+}
+
+.sizing-border {
+  box-sizing: border-box;
 }
 
 hr {
