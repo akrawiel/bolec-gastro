@@ -320,7 +320,7 @@ viewDrinkForm onDrinkSubmit { currentlyEditedName, currentlyEditedPrice, current
             , currentlyEditedVolume = currentlyEditedVolume
             }
     in
-    div [ class "flex-1 pl-md" ]
+    div [ class "flex-1 p-md" ]
         [ form [ class "color-light font-size-lg", onSubmit (onDrinkSubmit drink) ]
             [ div [ class "mb-md" ]
                 [ span []
@@ -378,11 +378,9 @@ viewDrinkForm onDrinkSubmit { currentlyEditedName, currentlyEditedPrice, current
                     ]
                     []
                 ]
-            , div [ class "mb-md" ]
-                [ button [ class "button width-full", type_ "submit" ] [ text "Submit" ]
-                ]
-            , div []
-                [ button [ class "button width-full", type_ "button", onClick (ChangeEditedDrink Nothing) ] [ text "Cancel" ]
+            , div [ class "mb-md flex" ]
+                [ button [ class "button width-full mr-sm", type_ "submit" ] [ text "Submit" ]
+                , button [ class "button width-full ml-sm", type_ "button", onClick (ChangeEditedDrink Nothing) ] [ text "Cancel" ]
                 ]
             ]
         ]
