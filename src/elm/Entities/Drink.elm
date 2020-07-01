@@ -10,7 +10,7 @@ module Entities.Drink exposing
     )
 
 import Array exposing (Array)
-import Html exposing (Attribute, Html, button, div, text)
+import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Html.Keyed as Keyed
@@ -101,7 +101,12 @@ viewDrink onIncrementClick onDecrementClick drink =
     div [ class "meals__container gap-md mb-md" ]
         [ div [ class "meals__card p-sm border-radius-sm" ]
             [ div [ class "font-size-lg" ] [ text drink.name ]
-            , div [ class "font-size-sm" ] [ text (Round.floor 2 drink.price) ]
+            , div [ class "font-size-sm" ]
+                [ span [] [ text (String.fromInt drink.volume ++ "ml / ") ]
+                , span []
+                    [ text (Round.floor 2 drink.price)
+                    ]
+                ]
             ]
         , button [ class "button p-none", onClick (onDecrementClick drink.id) ] [ text "-" ]
         , button [ class "button p-none", onClick (onIncrementClick drink.id) ] [ text "+" ]
