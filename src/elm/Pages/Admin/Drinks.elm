@@ -44,6 +44,8 @@ type Msg
     | SetAddingDrink
     | AddDrink NewDrink
     | DrinkAdded (Result Http.Error Drink)
+    | RemoveDrink Drink
+    | DrinkRemoved Int (Result Http.Error ())
 
 
 type alias Model a =
@@ -124,6 +126,27 @@ addDrinkRequest { apiUrl } newDrink =
         }
 
 
+removeDrinkRequest : Model a -> Drink -> Cmd Msg
+removeDrinkRequest { apiUrl } { id } =
+    Http.request
+        { url = apiUrl ++ "/drinks/" ++ String.fromInt id
+        , headers =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
+        , expect = Http.expectWhatever (DrinkRemoved id)
+        , method = "DELETE"
+        , timeout = Nothing
+        , tracker = Nothing
+        , body =
+            Http.emptyBody
+        }
+
+
+filterExistingDrinks : Int -> Array Drink -> Array Drink
+filterExistingDrinks removedId drinks =
+    Array.filter (\drink -> drink.id /= removedId) drinks
+
+
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
@@ -188,6 +211,7 @@ update msg model =
                 , addingMeal = False
                 , currentlyEditedName = ""
                 , currentlyEditedPrice = ""
+                , currentlyEditedVolume = ""
               }
             , Cmd.none
             )
@@ -229,6 +253,36 @@ update msg model =
                       }
                     , Cmd.none
                     )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
+        RemoveDrink drink ->
+            ( model, removeDrinkRequest model drink )
+
+        DrinkRemoved removedId response ->
+            case response of
+                Ok _ ->
+                    case model.currentlyEditedDrink of
+                        Just editedDrink ->
+                            ( { model
+                                | drinks = model.drinks |> filterExistingDrinks removedId
+                                , currentlyEditedDrink =
+                                    if editedDrink.id == removedId then
+                                        Nothing
+
+                                    else
+                                        Just editedDrink
+                              }
+                            , Cmd.none
+                            )
+
+                        Nothing ->
+                            ( { model
+                                | drinks = model.drinks |> filterExistingDrinks removedId
+                              }
+                            , Cmd.none
+                            )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -354,6 +408,7 @@ viewDrink drink =
         , div [ class "leaders flex-1 height-sm mx-xs" ] []
         , div [] [ text (Round.floor 2 drink.price) ]
         , button [ class "button ml-sm", onClick (ChangeEditedDrink (Just drink)) ] [ text "Edit" ]
+        , button [ class "button ml-sm", onClick (RemoveDrink drink) ] [ text "×" ]
         ]
 
 
