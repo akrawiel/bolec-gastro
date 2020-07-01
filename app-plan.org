@@ -9,7 +9,7 @@
         - [X] drinks list
         - [X] drinks ordering
         - [ ] payment handling (offline only)
-        - [ ] tips
+        - [ ] order notes
   - [ ] application appearance
         - [ ] module transitions
         - [ ] CSS refurbish
