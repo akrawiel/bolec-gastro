@@ -10,6 +10,8 @@ import Html.Attributes exposing (class, disabled, href)
 import Html.Events exposing (onClick)
 import Http
 import Json.Encode as Encode
+import Task
+import Time
 
 
 
@@ -26,6 +28,7 @@ type Msg
     | StartPayment Table
     | CancelPayment Table
     | FinishPayment OrderPaymentType Table
+    | FinishPaymentWithTime OrderPaymentType Table Time.Posix
     | PaymentAdded Table (Result Http.Error ())
 
 
@@ -73,8 +76,8 @@ handleTableReservation model table state =
     }
 
 
-handlePaymentRequest : OrderPaymentType -> Table -> Model a -> Cmd Msg
-handlePaymentRequest paymentType table { apiUrl } =
+handlePaymentRequest : OrderPaymentType -> Table -> Time.Posix -> Model a -> Cmd Msg
+handlePaymentRequest paymentType table time { apiUrl } =
     Http.request
         { url = apiUrl ++ "/payments"
         , headers =
@@ -89,6 +92,11 @@ handlePaymentRequest paymentType table { apiUrl } =
                 (Encode.object
                     [ ( "tableId", Encode.int table.id )
                     , ( "customerCount", Encode.int table.customerCount )
+                    , ( "createdAtTimestamp"
+                      , time
+                            |> Time.posixToMillis
+                            |> Encode.int
+                      )
                     , ( "paymentType"
                       , paymentType
                             |> convertPaymentTypeToString
@@ -205,7 +213,10 @@ update message model =
             )
 
         FinishPayment paymentType table ->
-            ( model, handlePaymentRequest paymentType table model )
+            ( model, Task.perform (FinishPaymentWithTime paymentType table) Time.now )
+
+        FinishPaymentWithTime paymentType table time ->
+            ( model, handlePaymentRequest paymentType table time model )
 
         PaymentAdded table response ->
             case response of
