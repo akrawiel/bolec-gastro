@@ -78,7 +78,7 @@ viewEditedEntry model =
             Html.map DrinksUpdateMsg (viewAddOrEditDrink model)
 
         _ ->
-            div [ class "flex-1 color-light font-size-xl text-center" ] [ text "No entry selected" ]
+            div [ class "flex-1 color-light font-size-xl text-center p-md" ] [ text "No entry selected" ]
 
 
 view : Model a -> Html Msg
