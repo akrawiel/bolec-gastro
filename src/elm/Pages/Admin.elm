@@ -87,9 +87,14 @@ view model =
         [ div [ class "mb-md flex justify-between p-md" ]
             [ div [ class "font-size-xl font-family-cursive color-light" ]
                 [ text "Bolec Gastro" ]
-            , a
-                [ class "button font-size-lg", href "/" ]
-                [ text "Home" ]
+            , div [ class "flex" ]
+                [ a
+                    [ class "button font-size-lg mr-sm", href "/payments" ]
+                    [ text "Payment history" ]
+                , a
+                    [ class "button font-size-lg", href "/" ]
+                    [ text "Home" ]
+                ]
             ]
         , div [ class "flex admin-entries-container" ]
             [ div [ class "flex-1 p-md" ]
