@@ -1,32 +1,18 @@
 module Pages.Admin.Drinks exposing (Msg, update, viewAddOrEditDrink, viewDrinks)
 
 import Array exposing (Array)
-import Entities.Drink exposing (Drink, drinkDecoder)
+import Entities.Drink exposing (Drink, DrinkExtendable, NewDrink, addDrink, removeDrink, updateDrink)
 import Entities.Meal exposing (Meal)
 import Html exposing (Html, b, button, div, form, input, label, span, text)
 import Html.Attributes as Attr exposing (class, for, name, required, step, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy)
-import Http
-import Json.Encode as Encode
 import Round
 
 
 
 -- TYPES
-
-
-type alias DrinkExtendable a =
-    { a
-        | name : String
-        , price : Float
-        , volume : Int
-    }
-
-
-type alias NewDrink =
-    DrinkExtendable {}
 
 
 type alias EditedEntity =
@@ -40,12 +26,10 @@ type Msg
     = ChangeEditedDrink (Maybe Drink)
     | ChangeEditedEntity EditedEntity
     | UpdateDrink Drink
-    | DrinkUpdated (Result Http.Error String)
     | SetAddingDrink
     | AddDrink NewDrink
-    | DrinkAdded (Result Http.Error Drink)
     | RemoveDrink Drink
-    | DrinkRemoved Int (Result Http.Error ())
+    | DrinkRequestMsg Entities.Drink.Msg
 
 
 type alias Model a =
@@ -65,86 +49,6 @@ type alias Model a =
 
 
 -- UPDATE
-
-
-updateDrinkRequest : Model a -> Drink -> Cmd Msg
-updateDrinkRequest { apiUrl } drink =
-    Http.request
-        { url = apiUrl ++ "/drinks/" ++ String.fromInt drink.id
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectString DrinkUpdated
-        , method = "PUT"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "id", Encode.int drink.id )
-                    , ( "name", Encode.string drink.name )
-                    , ( "price", Encode.float drink.price )
-                    , ( "volume", Encode.int drink.volume )
-                    ]
-                )
-        }
-
-
-replaceEditedDrinkData : Maybe Drink -> Drink -> Drink
-replaceEditedDrinkData currentlyEditedDrink drink =
-    case currentlyEditedDrink of
-        Just newDrink ->
-            if drink.id == newDrink.id then
-                newDrink
-
-            else
-                drink
-
-        Nothing ->
-            drink
-
-
-addDrinkRequest : Model a -> NewDrink -> Cmd Msg
-addDrinkRequest { apiUrl } newDrink =
-    Http.request
-        { url = apiUrl ++ "/drinks"
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectJson DrinkAdded drinkDecoder
-        , method = "POST"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "name", Encode.string newDrink.name )
-                    , ( "price", Encode.float newDrink.price )
-                    , ( "volume", Encode.int newDrink.volume )
-                    ]
-                )
-        }
-
-
-removeDrinkRequest : Model a -> Drink -> Cmd Msg
-removeDrinkRequest { apiUrl } { id } =
-    Http.request
-        { url = apiUrl ++ "/drinks/" ++ String.fromInt id
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectWhatever (DrinkRemoved id)
-        , method = "DELETE"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.emptyBody
-        }
-
-
-filterExistingDrinks : Int -> Array Drink -> Array Drink
-filterExistingDrinks removedId drinks =
-    Array.filter (\drink -> drink.id /= removedId) drinks
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -190,17 +94,7 @@ update msg model =
             ( { model
                 | currentlyEditedDrink = Just currentlyEditedDrink
               }
-            , updateDrinkRequest model currentlyEditedDrink
-            )
-
-        DrinkUpdated response ->
-            ( case response of
-                Ok _ ->
-                    { model | drinks = Array.map (replaceEditedDrinkData model.currentlyEditedDrink) model.drinks }
-
-                Err _ ->
-                    model
-            , Cmd.none
+            , Cmd.map DrinkRequestMsg (updateDrink model.apiUrl currentlyEditedDrink)
             )
 
         SetAddingDrink ->
@@ -238,54 +132,16 @@ update msg model =
             in
             case newDrink of
                 Just drink ->
-                    ( model, addDrinkRequest model drink )
+                    ( model, Cmd.map DrinkRequestMsg (addDrink model.apiUrl drink) )
 
                 Nothing ->
                     ( model, Cmd.none )
 
-        DrinkAdded response ->
-            case response of
-                Ok drink ->
-                    ( { model
-                        | drinks = Array.push drink model.drinks
-                        , currentlyEditedDrink = Just drink
-                        , addingDrink = False
-                      }
-                    , Cmd.none
-                    )
-
-                Err _ ->
-                    ( model, Cmd.none )
-
         RemoveDrink drink ->
-            ( model, removeDrinkRequest model drink )
+            ( model, Cmd.map DrinkRequestMsg (removeDrink model.apiUrl drink) )
 
-        DrinkRemoved removedId response ->
-            case response of
-                Ok _ ->
-                    case model.currentlyEditedDrink of
-                        Just editedDrink ->
-                            ( { model
-                                | drinks = model.drinks |> filterExistingDrinks removedId
-                                , currentlyEditedDrink =
-                                    if editedDrink.id == removedId then
-                                        Nothing
-
-                                    else
-                                        Just editedDrink
-                              }
-                            , Cmd.none
-                            )
-
-                        Nothing ->
-                            ( { model
-                                | drinks = model.drinks |> filterExistingDrinks removedId
-                              }
-                            , Cmd.none
-                            )
-
-                Err _ ->
-                    ( model, Cmd.none )
+        DrinkRequestMsg _ ->
+            ( model, Cmd.none )
 
 
 

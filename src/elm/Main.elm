@@ -3,18 +3,8 @@ module Main exposing (main)
 import Array exposing (Array)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Entities.Drink
-    exposing
-        ( Drink
-        , DrinkRequestMsg
-        , getAllDrinks
-        , updateDrinks
-        )
-import Entities.Meal
-    exposing
-        ( Meal
-        , getAllMeals
-        )
+import Entities.Drink exposing (Drink, getAllDrinks)
+import Entities.Meal exposing (Meal, getAllMeals)
 import Entities.Order exposing (OrderMealChange(..))
 import Entities.Table exposing (Table, TableState(..), mapTableForIndex)
 import Html
@@ -64,7 +54,7 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | MealMsg Entities.Meal.Msg
-    | DrinkMsg DrinkRequestMsg
+    | DrinkMsg Entities.Drink.Msg
     | MainPageMsg Pages.Main.Msg
     | AdminPageMsg Pages.Admin.Msg
 
@@ -124,8 +114,8 @@ update msg model =
         MealMsg message ->
             Entities.Meal.update message model |> Tuple.mapSecond (Cmd.map MealMsg)
 
-        DrinkMsg requestMessage ->
-            ( { model | drinks = updateDrinks requestMessage model.drinks }, Cmd.none )
+        DrinkMsg message ->
+            Entities.Drink.update message model |> Tuple.mapSecond (Cmd.map DrinkMsg)
 
         MainPageMsg message ->
             Pages.Main.update message model |> Tuple.mapSecond (Cmd.map MainPageMsg)
