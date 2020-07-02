@@ -8,7 +8,7 @@
         - [X] meals ordering
         - [X] drinks list
         - [X] drinks ordering
-        - [ ] payment handling (offline only)
+        - [X] payment handling (offline only)
         - [ ] order notes
   - [-] application appearance
         - [ ] module transitions

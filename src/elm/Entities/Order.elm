@@ -3,7 +3,9 @@ module Entities.Order exposing
     , OrderMeal
     , OrderMealChange(..)
     , OrderPaymentType(..)
+    , convertPaymentTypeToString
     , empty
+    , hasNothingOrdered
     , updateOrder
     , viewOrder
     )
@@ -47,7 +49,6 @@ type OrderPaymentType
 type alias Order =
     { meals : List OrderMeal
     , drinks : List OrderDrink
-    , paymentType : Maybe OrderPaymentType
     }
 
 
@@ -64,7 +65,7 @@ type OrderMealChange
 
 empty : Order
 empty =
-    Order [] [] Nothing
+    Order [] []
 
 
 
@@ -95,6 +96,24 @@ totalPayment : Order -> Float
 totalPayment { meals, drinks } =
     List.foldl totalMealPaymentFold 0.0 meals
         + List.foldl totalDrinkPaymentFold 0.0 drinks
+
+
+hasNothingOrdered : Order -> Bool
+hasNothingOrdered { meals, drinks } =
+    List.isEmpty meals && List.isEmpty drinks
+
+
+convertPaymentTypeToString : OrderPaymentType -> String
+convertPaymentTypeToString paymentType =
+    case paymentType of
+        Card ->
+            "card"
+
+        Cash ->
+            "cash"
+
+        Cheque ->
+            "cheque"
 
 
 

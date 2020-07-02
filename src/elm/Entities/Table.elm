@@ -1,6 +1,6 @@
 module Entities.Table exposing (Table, TableState(..), mapTableForIndex, viewTables)
 
-import Entities.Order exposing (Order, empty)
+import Entities.Order as Order exposing (Order)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -14,7 +14,9 @@ import Html.Lazy exposing (lazy)
 
 type TableState
     = Empty
-    | HasCustomers Int
+    | HasCustomers
+    | HasStartedPayment
+    | HasFinishedPayment
 
 
 type alias Table =
@@ -22,6 +24,7 @@ type alias Table =
     , state : TableState
     , id : Int
     , order : Order
+    , customerCount : Int
     }
 
 
@@ -34,7 +37,8 @@ mapTableForIndex index =
     { name = "Table " ++ String.fromInt index
     , id = index
     , state = Empty
-    , order = empty
+    , order = Order.empty
+    , customerCount = 0
     }
 
 
@@ -44,8 +48,14 @@ getTableTileLabel table =
         Empty ->
             "Empty"
 
-        HasCustomers customerCount ->
-            "Customers: " ++ String.fromInt customerCount
+        HasCustomers ->
+            "Customers: " ++ String.fromInt table.customerCount
+
+        HasStartedPayment ->
+            "Started payment"
+
+        HasFinishedPayment ->
+            "Finished"
 
 
 
