@@ -3,14 +3,13 @@
   - [X] meals/drinks database (json-server)
         - [X] server setup
         - [X] CRUD interface
-  - [-] orders
+  - [X] orders
         - [X] meals list
         - [X] meals ordering
         - [X] drinks list
         - [X] drinks ordering
         - [X] payment handling (offline only)
-        - [ ] payment list display
-        - [ ] order notes
+        - [X] payment list display
   - [-] application appearance
         - [ ] module transitions
         - [ ] CSS refurbish
