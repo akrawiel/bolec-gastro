@@ -1,8 +1,7 @@
 module Entities.Meal exposing
     ( Meal
-    , MealRequestMethods
     , MealRequestMsg
-    , getMealRequester
+    , getAllMeals
     , mealArrayDecoder
     , mealDecoder
     , updateMeals
@@ -32,11 +31,6 @@ type alias Meal =
     }
 
 
-type alias MealRequestMethods =
-    { getAllMeals : Cmd MealRequestMsg
-    }
-
-
 type MealRequestMsg
     = GotAllMealsResponse (Result Http.Error (Array Meal))
 
@@ -59,24 +53,22 @@ mealArrayDecoder =
 
 
 
--- REQUESTS GENERATOR
+-- REQUESTS
 
 
-getMealRequester : String -> MealRequestMethods
-getMealRequester apiUrl =
-    { getAllMeals =
-        Http.request
-            { url = apiUrl ++ "/meals"
-            , headers =
-                [ Http.header "Access-Control-Allow-Origin" "*"
-                ]
-            , expect = Http.expectJson GotAllMealsResponse mealArrayDecoder
-            , method = "GET"
-            , timeout = Nothing
-            , tracker = Nothing
-            , body = Http.emptyBody
-            }
-    }
+getAllMeals : String -> Cmd MealRequestMsg
+getAllMeals apiUrl =
+    Http.request
+        { url = apiUrl ++ "/meals"
+        , headers =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
+        , expect = Http.expectJson GotAllMealsResponse mealArrayDecoder
+        , method = "GET"
+        , timeout = Nothing
+        , tracker = Nothing
+        , body = Http.emptyBody
+        }
 
 
 

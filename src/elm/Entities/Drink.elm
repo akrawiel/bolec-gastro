@@ -1,10 +1,9 @@
 module Entities.Drink exposing
     ( Drink
-    , DrinkRequestMethods
     , DrinkRequestMsg
     , drinkArrayDecoder
     , drinkDecoder
-    , getDrinkRequester
+    , getAllDrinks
     , updateDrinks
     , viewDrinks
     )
@@ -33,11 +32,6 @@ type alias Drink =
     }
 
 
-type alias DrinkRequestMethods =
-    { getAllDrinks : Cmd DrinkRequestMsg
-    }
-
-
 type DrinkRequestMsg
     = GotAllDrinksResponse (Result Http.Error (Array Drink))
 
@@ -61,24 +55,22 @@ drinkArrayDecoder =
 
 
 
--- REQUESTS GENERATOR
+-- REQUESTS
 
 
-getDrinkRequester : String -> DrinkRequestMethods
-getDrinkRequester apiUrl =
-    { getAllDrinks =
-        Http.request
-            { url = apiUrl ++ "/drinks"
-            , headers =
-                [ Http.header "Access-Control-Allow-Origin" "*"
-                ]
-            , expect = Http.expectJson GotAllDrinksResponse drinkArrayDecoder
-            , method = "GET"
-            , timeout = Nothing
-            , tracker = Nothing
-            , body = Http.emptyBody
-            }
-    }
+getAllDrinks : String -> Cmd DrinkRequestMsg
+getAllDrinks apiUrl =
+    Http.request
+        { url = apiUrl ++ "/drinks"
+        , headers =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
+        , expect = Http.expectJson GotAllDrinksResponse drinkArrayDecoder
+        , method = "GET"
+        , timeout = Nothing
+        , tracker = Nothing
+        , body = Http.emptyBody
+        }
 
 
 

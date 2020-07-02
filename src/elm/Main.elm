@@ -6,17 +6,15 @@ import Browser.Navigation as Nav
 import Entities.Drink
     exposing
         ( Drink
-        , DrinkRequestMethods
         , DrinkRequestMsg
-        , getDrinkRequester
+        , getAllDrinks
         , updateDrinks
         )
 import Entities.Meal
     exposing
         ( Meal
-        , MealRequestMethods
         , MealRequestMsg
-        , getMealRequester
+        , getAllMeals
         , updateMeals
         )
 import Entities.Order exposing (OrderMealChange(..))
@@ -54,8 +52,6 @@ type alias Model =
     , customersForTable : Int
     , meals : Array Meal
     , drinks : Array Drink
-    , mealRequester : MealRequestMethods
-    , drinkRequester : DrinkRequestMethods
     , currentlyEditedMeal : Maybe Meal
     , currentlyEditedDrink : Maybe Drink
     , currentlyEditedName : String
@@ -86,13 +82,6 @@ type Page
 
 init : { apiUrl : String } -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init { apiUrl } url key =
-    let
-        mealRequester =
-            getMealRequester apiUrl
-
-        drinkRequester =
-            getDrinkRequester apiUrl
-    in
     ( { key = key
       , url = url
       , apiUrl = apiUrl
@@ -101,8 +90,6 @@ init { apiUrl } url key =
       , customersForTable = 1
       , meals = Array.empty
       , drinks = Array.empty
-      , mealRequester = mealRequester
-      , drinkRequester = drinkRequester
       , currentlyEditedDrink = Nothing
       , currentlyEditedMeal = Nothing
       , currentlyEditedName = ""
@@ -112,8 +99,8 @@ init { apiUrl } url key =
       , addingDrink = False
       }
     , Cmd.batch
-        [ Cmd.map MealMsg mealRequester.getAllMeals
-        , Cmd.map DrinkMsg drinkRequester.getAllDrinks
+        [ Cmd.map MealMsg (getAllMeals apiUrl)
+        , Cmd.map DrinkMsg (getAllDrinks apiUrl)
         ]
     )
 
