@@ -2,14 +2,12 @@ module Pages.Admin.Meals exposing (Msg, update, viewAddOrEditMeal, viewMeals)
 
 import Array exposing (Array)
 import Entities.Drink exposing (Drink)
-import Entities.Meal exposing (Meal, mealDecoder)
+import Entities.Meal exposing (Meal, MealExtendable, NewMeal, addMeal, removeMeal, updateMeal)
 import Html exposing (Html, b, button, div, form, input, label, span, text)
 import Html.Attributes as Attr exposing (class, for, name, required, step, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy)
-import Http
-import Json.Encode as Encode
 import Round
 
 
@@ -23,27 +21,14 @@ type alias EditedEntity =
     }
 
 
-type alias MealExtendable a =
-    { a
-        | name : String
-        , price : Float
-    }
-
-
-type alias NewMeal =
-    MealExtendable {}
-
-
 type Msg
     = ChangeEditedMeal (Maybe Meal)
     | ChangeEditedEntity EditedEntity
     | UpdateMeal Meal
-    | MealUpdated (Result Http.Error String)
     | SetAddingMeal
     | AddMeal NewMeal
-    | MealAdded (Result Http.Error Meal)
     | RemoveMeal Meal
-    | MealRemoved Int (Result Http.Error ())
+    | MealRequestMsg Entities.Meal.Msg
 
 
 type alias Model a =
@@ -63,84 +48,6 @@ type alias Model a =
 
 
 -- UPDATE
-
-
-updateMealRequest : Model a -> Meal -> Cmd Msg
-updateMealRequest { apiUrl } meal =
-    Http.request
-        { url = apiUrl ++ "/meals/" ++ String.fromInt meal.id
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectString MealUpdated
-        , method = "PUT"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "id", Encode.int meal.id )
-                    , ( "name", Encode.string meal.name )
-                    , ( "price", Encode.float meal.price )
-                    ]
-                )
-        }
-
-
-replaceEditedMealData : Maybe Meal -> Meal -> Meal
-replaceEditedMealData currentlyEditedMeal meal =
-    case currentlyEditedMeal of
-        Just newMeal ->
-            if meal.id == newMeal.id then
-                newMeal
-
-            else
-                meal
-
-        Nothing ->
-            meal
-
-
-addMealRequest : Model a -> NewMeal -> Cmd Msg
-addMealRequest { apiUrl } newMeal =
-    Http.request
-        { url = apiUrl ++ "/meals"
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectJson MealAdded mealDecoder
-        , method = "POST"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "name", Encode.string newMeal.name )
-                    , ( "price", Encode.float newMeal.price )
-                    ]
-                )
-        }
-
-
-removeMealRequest : Model a -> Meal -> Cmd Msg
-removeMealRequest { apiUrl } { id } =
-    Http.request
-        { url = apiUrl ++ "/meals/" ++ String.fromInt id
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectWhatever (MealRemoved id)
-        , method = "DELETE"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.emptyBody
-        }
-
-
-filterExistingMeals : Int -> Array Meal -> Array Meal
-filterExistingMeals removedId meals =
-    Array.filter (\meal -> meal.id /= removedId) meals
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -180,17 +87,7 @@ update msg model =
             ( { model
                 | currentlyEditedMeal = Just currentlyEditedMeal
               }
-            , updateMealRequest model currentlyEditedMeal
-            )
-
-        MealUpdated response ->
-            ( case response of
-                Ok _ ->
-                    { model | meals = Array.map (replaceEditedMealData model.currentlyEditedMeal) model.meals }
-
-                Err _ ->
-                    model
-            , Cmd.none
+            , Cmd.map MealRequestMsg (updateMeal model.apiUrl currentlyEditedMeal)
             )
 
         SetAddingMeal ->
@@ -225,54 +122,16 @@ update msg model =
             in
             case newMeal of
                 Just meal ->
-                    ( model, addMealRequest model meal )
+                    ( model, Cmd.map MealRequestMsg (addMeal model.apiUrl meal) )
 
                 Nothing ->
                     ( model, Cmd.none )
 
-        MealAdded response ->
-            case response of
-                Ok meal ->
-                    ( { model
-                        | meals = Array.push meal model.meals
-                        , currentlyEditedMeal = Just meal
-                        , addingMeal = False
-                      }
-                    , Cmd.none
-                    )
-
-                Err _ ->
-                    ( model, Cmd.none )
-
         RemoveMeal meal ->
-            ( model, removeMealRequest model meal )
+            ( model, Cmd.map MealRequestMsg (removeMeal model.apiUrl meal) )
 
-        MealRemoved removedId response ->
-            case response of
-                Ok _ ->
-                    case model.currentlyEditedMeal of
-                        Just editedMeal ->
-                            ( { model
-                                | meals = model.meals |> filterExistingMeals removedId
-                                , currentlyEditedMeal =
-                                    if editedMeal.id == removedId then
-                                        Nothing
-
-                                    else
-                                        Just editedMeal
-                              }
-                            , Cmd.none
-                            )
-
-                        Nothing ->
-                            ( { model
-                                | meals = model.meals |> filterExistingMeals removedId
-                              }
-                            , Cmd.none
-                            )
-
-                Err _ ->
-                    ( model, Cmd.none )
+        MealRequestMsg _ ->
+            ( model, Cmd.none )
 
 
 

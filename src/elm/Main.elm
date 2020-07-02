@@ -13,9 +13,7 @@ import Entities.Drink
 import Entities.Meal
     exposing
         ( Meal
-        , MealRequestMsg
         , getAllMeals
-        , updateMeals
         )
 import Entities.Order exposing (OrderMealChange(..))
 import Entities.Table exposing (Table, TableState(..), mapTableForIndex)
@@ -65,7 +63,7 @@ type alias Model =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | MealMsg MealRequestMsg
+    | MealMsg Entities.Meal.Msg
     | DrinkMsg DrinkRequestMsg
     | MainPageMsg Pages.Main.Msg
     | AdminPageMsg Pages.Admin.Msg
@@ -123,8 +121,8 @@ update msg model =
         UrlChanged url ->
             ( { model | url = url }, Cmd.none )
 
-        MealMsg requestMessage ->
-            ( { model | meals = updateMeals requestMessage model.meals }, Cmd.none )
+        MealMsg message ->
+            Entities.Meal.update message model |> Tuple.mapSecond (Cmd.map MealMsg)
 
         DrinkMsg requestMessage ->
             ( { model | drinks = updateDrinks requestMessage model.drinks }, Cmd.none )
