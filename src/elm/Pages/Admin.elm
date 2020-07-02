@@ -89,7 +89,7 @@ view model =
                 [ text "Bolec Gastro" ]
             , div [ class "flex" ]
                 [ a
-                    [ class "button font-size-lg mr-sm", href "/payments" ]
+                    [ class "button font-size-lg mr-sm", href "/payment-history" ]
                     [ text "Payment history" ]
                 , a
                     [ class "button font-size-lg", href "/" ]

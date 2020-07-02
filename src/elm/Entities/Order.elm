@@ -1,13 +1,18 @@
 module Entities.Order exposing
     ( Order
+    , OrderDrink
     , OrderMeal
     , OrderMealChange(..)
     , OrderPaymentType(..)
     , convertPaymentTypeToString
+    , convertStringToPaymentType
     , empty
     , hasNothingOrdered
+    , paymentTypeDecoder
     , updateOrder
     , viewOrder
+    , viewOrderDrink
+    , viewOrderMeal
     )
 
 import Array exposing (Array)
@@ -17,6 +22,7 @@ import Html exposing (Html, div, hr, text)
 import Html.Attributes exposing (class)
 import Html.Keyed exposing (node)
 import Html.Lazy exposing (lazy)
+import Json.Decode exposing (Decoder)
 import Round
 
 
@@ -29,11 +35,15 @@ type alias Countable a =
 
 
 type alias OrderMeal =
-    Countable { meal : Meal }
+    { count : Int
+    , meal : Meal
+    }
 
 
 type alias OrderDrink =
-    Countable { drink : Drink }
+    { count : Int
+    , drink : Drink
+    }
 
 
 type alias Indexable a =
@@ -114,6 +124,32 @@ convertPaymentTypeToString paymentType =
 
         Cheque ->
             "cheque"
+
+
+convertStringToPaymentType : String -> Maybe OrderPaymentType
+convertStringToPaymentType paymentType =
+    case paymentType of
+        "card" ->
+            Just Card
+
+        "cash" ->
+            Just Cash
+
+        "cheque" ->
+            Just Cheque
+
+        _ ->
+            Nothing
+
+
+paymentTypeDecoder : String -> Decoder OrderPaymentType
+paymentTypeDecoder paymentType =
+    case paymentType |> convertStringToPaymentType of
+        Just validPaymentType ->
+            Json.Decode.succeed validPaymentType
+
+        Nothing ->
+            Json.Decode.fail "Invalid order payment type, supported types: 'card', 'cash', 'cheque'"
 
 
 

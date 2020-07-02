@@ -3,13 +3,13 @@ module Pages.Main exposing (Msg, update, view)
 import Array exposing (Array)
 import Entities.Drink exposing (Drink, viewDrinks)
 import Entities.Meal exposing (Meal, viewMeals)
-import Entities.Order as Order exposing (OrderMealChange(..), OrderPaymentType(..), convertPaymentTypeToString, hasNothingOrdered, updateOrder, viewOrder)
+import Entities.Order as Order exposing (OrderMealChange(..), OrderPaymentType(..), hasNothingOrdered, updateOrder, viewOrder)
+import Entities.Payment exposing (Payment, addPayment, paymentTableEncoder)
 import Entities.Table exposing (Table, TableState(..), viewTables)
 import Html exposing (Html, a, aside, button, div, text)
 import Html.Attributes exposing (class, disabled, href)
 import Html.Events exposing (onClick)
 import Http
-import Json.Encode as Encode
 import Task
 import Time
 
@@ -29,7 +29,7 @@ type Msg
     | CancelPayment Table
     | FinishPayment OrderPaymentType Table
     | FinishPaymentWithTime OrderPaymentType Table Time.Posix
-    | PaymentAdded Table (Result Http.Error ())
+    | PaymentRequestMsg Entities.Payment.Msg
 
 
 type alias Model a =
@@ -40,6 +40,7 @@ type alias Model a =
         , meals : Array Meal
         , drinks : Array Drink
         , tables : List Table
+        , payments : Array Payment
     }
 
 
@@ -74,70 +75,6 @@ handleTableReservation model table state =
         , selectedTable = Just updatedTable
         , customersForTable = 1
     }
-
-
-handlePaymentRequest : OrderPaymentType -> Table -> Time.Posix -> Model a -> Cmd Msg
-handlePaymentRequest paymentType table time { apiUrl } =
-    Http.request
-        { url = apiUrl ++ "/payments"
-        , headers =
-            [ Http.header "Access-Control-Allow-Origin" "*"
-            ]
-        , expect = Http.expectWhatever (PaymentAdded table)
-        , method = "POST"
-        , timeout = Nothing
-        , tracker = Nothing
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "tableId", Encode.int table.id )
-                    , ( "customerCount", Encode.int table.customerCount )
-                    , ( "createdAtTimestamp"
-                      , time
-                            |> Time.posixToMillis
-                            |> Encode.int
-                      )
-                    , ( "paymentType"
-                      , paymentType
-                            |> convertPaymentTypeToString
-                            |> Encode.string
-                      )
-                    , ( "orderedMeals"
-                      , Encode.list
-                            (\orderMeal ->
-                                Encode.object
-                                    [ ( "count", Encode.int orderMeal.count )
-                                    , ( "meal"
-                                      , Encode.object
-                                            [ ( "id", Encode.int orderMeal.meal.id )
-                                            , ( "name", Encode.string orderMeal.meal.name )
-                                            , ( "price", Encode.float orderMeal.meal.price )
-                                            ]
-                                      )
-                                    ]
-                            )
-                            table.order.meals
-                      )
-                    , ( "orderedDrinks"
-                      , Encode.list
-                            (\orderDrink ->
-                                Encode.object
-                                    [ ( "count", Encode.int orderDrink.count )
-                                    , ( "drink"
-                                      , Encode.object
-                                            [ ( "id", Encode.int orderDrink.drink.id )
-                                            , ( "name", Encode.string orderDrink.drink.name )
-                                            , ( "volume", Encode.int orderDrink.drink.volume )
-                                            , ( "price", Encode.float orderDrink.drink.price )
-                                            ]
-                                      )
-                                    ]
-                            )
-                            table.order.drinks
-                      )
-                    ]
-                )
-        }
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -216,24 +153,10 @@ update message model =
             ( model, Task.perform (FinishPaymentWithTime paymentType table) Time.now )
 
         FinishPaymentWithTime paymentType table time ->
-            ( model, handlePaymentRequest paymentType table time model )
+            ( model, Cmd.map PaymentRequestMsg (addPayment model.apiUrl paymentType table time) )
 
-        PaymentAdded table response ->
-            case response of
-                Ok _ ->
-                    let
-                        updatedTable =
-                            { table | state = HasFinishedPayment }
-                    in
-                    ( { model
-                        | selectedTable = Just updatedTable
-                        , tables = updateTableAtId updatedTable model.tables
-                      }
-                    , Cmd.none
-                    )
-
-                Err _ ->
-                    ( model, Cmd.none )
+        PaymentRequestMsg msg ->
+            Entities.Payment.update msg model |> Tuple.mapSecond (Cmd.map PaymentRequestMsg)
 
 
 
