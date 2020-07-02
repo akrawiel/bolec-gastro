@@ -130,8 +130,8 @@ update msg model =
         RemoveMeal meal ->
             ( model, Cmd.map MealRequestMsg (removeMeal model.apiUrl meal) )
 
-        MealRequestMsg _ ->
-            ( model, Cmd.none )
+        MealRequestMsg message ->
+            Entities.Meal.update message model |> Tuple.mapSecond (Cmd.map MealRequestMsg)
 
 
 

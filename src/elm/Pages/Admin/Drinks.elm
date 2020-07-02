@@ -140,8 +140,8 @@ update msg model =
         RemoveDrink drink ->
             ( model, Cmd.map DrinkRequestMsg (removeDrink model.apiUrl drink) )
 
-        DrinkRequestMsg _ ->
-            ( model, Cmd.none )
+        DrinkRequestMsg message ->
+            Entities.Drink.update message model |> Tuple.mapSecond (Cmd.map DrinkRequestMsg)
 
 
 
