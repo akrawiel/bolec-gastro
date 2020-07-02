@@ -1,205 +1,32 @@
+// library imports
+
 @import "normalize.css";
+
+// global variables
 
 @import "./styles/palette.scss";
 
-$breakpoint-landscape: 1280px;
+// global page styles
 
-@mixin landscape {
-  @media screen and (min-aspect-ratio: 3/2) {
-    @content
-  }
-}
+@import "./styles/global.scss";
 
-@mixin square {
-  @media screen and (min-aspect-ratio: 1/1) and (max-aspect-ratio: 3/2) {
-    @content
-  }
-}
-
-@mixin portrait {
-  @media screen and (max-aspect-ratio: 1/1) {
-    @content
-  }
-}
-
-html,
-body {
-  background-color: $background;
-  font-family: 'Fira Sans', sans-serif;
-  font-size: 16px;
-  font-weight: normal;
-}
-
-body {
-  height: 100vh;
-  min-height: 100vh;
-}
+// global styles
 
 @import "./styles/flex.scss";
 @import "./styles/spacing.scss";
 @import "./styles/typography.scss";
+@import "./styles/sizing.scss";
+@import "./styles/other-helpers.scss";
 
-@import "./styles/meals.scss";
+// mixins
 
-.main-container {
-  flex-direction: column;
-  min-height: 100%;
+@import "./styles/breakpoints.scss";
 
-  @include landscape {
-    flex-direction: row;
-  }
-}
+// component styles
 
-.admin-entries-container {
-  flex-direction: column;
+@import "./styles/button.scss";
 
-  @include landscape {
-    flex-direction: row;
-  }
-}
+// page-specific styles
 
-.table-grid {
-  box-sizing: border-box;
-  display: grid;
-  grid-gap: 1rem;
-  grid-template: repeat(4, 1fr) / repeat(4, 1fr);
-  padding: 1rem;
-
-  @include portrait {
-    height: 100vmin;
-    min-height: 100vmax;
-    min-width: unset;
-    width: 100vmin;
-  }
-
-  @include landscape {
-    height: 100vmin;
-    min-height: unset;
-    min-width: 100vmin;
-    width: 100vmin;
-  }
-
-  @include square {
-    height: 100vmin;
-    min-height: 100vmax;
-    min-width: 100vmax;
-    width: 100vmin;
-  }
-}
-
-.button {
-  align-items: center;
-  background: linear-gradient(to bottom right, $light, $primary);
-  box-shadow: none;
-  border: 0;
-  border-radius: 0.375rem;
-  color: $background;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  outline: none;
-  padding: 0.25rem 0.5rem;
-  text-decoration: none;
-  transition: all 0.25s ease-out;
-
-  &[disabled] {
-    background: linear-gradient(
-      to bottom right,
-      desaturate($color: $light, $amount: 40%),
-      desaturate($color: $primary, $amount: 40%)
-    );
-    color: lighten($color: $background, $amount: 30%);
-    cursor: not-allowed;
-  }
-
-  &, &:active, &:focus {
-    filter: brightness(1);
-  }
-
-  &:hover {
-    filter: brightness(0.9);
-  }
-}
-
-.side-panel {
-  background-color: $secondary;
-  color: $light;
-  flex: 1;
-  height: 100vh;
-  justify-content: center;
-  overflow-y: hidden;
-}
-
-.app-container {
-  display: flex;
-  flex-flow: row nowrap;
-}
-
-.table-tile {
-  background: linear-gradient(to bottom, $primary, $secondary);
-  border-radius: 0.5rem;
-  color: $light;
-  flex-direction: column;
-  padding: 0.5rem;
-}
-
-.table-settings-container {
-  box-sizing: border-box;
-  height: 100%;
-  padding: 1rem;
-  width: 100%;
-}
-
-.grid {
-  align-items: center;
-  display: grid;
-
-  &.cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.width-full {
-  width: 100%;
-}
-
-.height-full {
-  height: 100%;
-}
-
-.min-height-full {
-  min-height: 100%;
-}
-
-.height-sm {
-  height: 0.5rem;
-}
-
-.height-md {
-  height: 1rem;
-}
-
-.leaders {
-  border-bottom: 3px dotted $light;
-}
-
-.sizing-border {
-  box-sizing: border-box;
-}
-
-.overflow-y-auto {
-  overflow-y: auto;
-}
-
-.overflow-y-hidden {
-  overflow-y: hidden;
-}
-
-hr {
-  background-color: $light;
-  border: 0;
-  height: 1px;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
+@import "./styles/main.scss";
+@import "./styles/admin.scss";

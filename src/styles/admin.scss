@@ -1,0 +1,8 @@
+.admin-entries-container {
+  flex-direction: column;
+
+  @include landscape {
+    flex-direction: row;
+  }
+}
+

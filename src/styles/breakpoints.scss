@@ -1,0 +1,17 @@
+@mixin landscape {
+  @media screen and (min-aspect-ratio: 3/2) {
+    @content
+  }
+}
+
+@mixin square {
+  @media screen and (min-aspect-ratio: 1/1) and (max-aspect-ratio: 3/2) {
+    @content
+  }
+}
+
+@mixin portrait {
+  @media screen and (max-aspect-ratio: 1/1) {
+    @content
+  }
+}
