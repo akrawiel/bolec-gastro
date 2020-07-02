@@ -102,7 +102,7 @@ viewSidePanel : Model a -> Html Msg
 viewSidePanel { customersForTable, selectedTable, meals, drinks } =
     aside [ class "side-panel flex column" ]
         [ div [ class "py-md px-md flex justify-between" ]
-            [ div [ class "font-size-xl font-weight-700" ]
+            [ div [ class "font-size-xl font-family-cursive" ]
                 [ text "Bolec Gastro" ]
             , a
                 [ class "button font-size-lg", href "/admin" ]

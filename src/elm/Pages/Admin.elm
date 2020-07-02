@@ -85,7 +85,7 @@ view : Model a -> Html Msg
 view model =
     div [ class "bg-secondary min-height-full sizing-border" ]
         [ div [ class "mb-md flex justify-between p-md" ]
-            [ div [ class "font-size-xl font-weight-700 color-light" ]
+            [ div [ class "font-size-xl font-family-cursive color-light" ]
                 [ text "Bolec Gastro" ]
             , a
                 [ class "button font-size-lg", href "/" ]

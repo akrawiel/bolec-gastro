@@ -10,7 +10,7 @@
         - [X] drinks ordering
         - [ ] payment handling (offline only)
         - [ ] order notes
-  - [ ] application appearance
+  - [-] application appearance
         - [ ] module transitions
         - [ ] CSS refurbish
-        - [ ] logo
+        - [X] logo
