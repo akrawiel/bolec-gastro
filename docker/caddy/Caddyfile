@@ -1,0 +1,8 @@
+http://localhost:5000, http://bolec.local:5000
+
+root * /usr/app/dist
+file_server
+
+reverse_proxy * gastro-app:5000
+
+reverse_proxy /api/* gastro-db:5002

@@ -1,0 +1,55 @@
+version: "3.8"
+
+networks:
+    gastro:
+
+services:
+    gastro-db:
+        logging:
+            driver: json-file
+        image: clue/json-server:latest
+        volumes:
+            - gastro-db-data:/data
+            - ../db-init.sh:/data/db-init.sh
+            - ../routes.json:/data/routes.json
+        entrypoint:
+            - json-server
+            - --watch
+            - db.json
+            - --routes
+            - routes.json
+            - -p
+            - "5002"
+        ports:
+            - "5002:5002"
+        networks:
+            - gastro
+
+    gastro-app:
+        build:
+            dockerfile: docker/node/Dockerfile
+            context: ../..
+        logging:
+            driver: json-file
+        user: node
+        command: yarn start
+        ports:
+            - "5001:5001"
+        networks:
+            - gastro
+        environment:
+            API_URL: "/api"
+        depends_on:
+            - gastro-db
+
+    gastro-proxy:
+        image: caddy:alpine
+        networks:
+            - gastro
+        volumes:
+            - "../caddy:/etc/caddy"
+        ports:
+            - "5000:5000"
+
+volumes:
+    gastro-db-data:
