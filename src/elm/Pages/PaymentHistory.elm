@@ -3,7 +3,7 @@ module Pages.PaymentHistory exposing (view)
 import Array exposing (Array)
 import Entities.Order exposing (OrderDrink, OrderMeal, viewOrderDrink, viewOrderMeal)
 import Entities.Payment exposing (Payment)
-import Html exposing (Html, a, b, div, em, hr, span, text)
+import Html exposing (Html, a, b, div, em, hr, text)
 import Html.Attributes exposing (class, href)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2)
