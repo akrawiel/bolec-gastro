@@ -71,7 +71,7 @@ getStringWeekday weekday =
             "Tue"
 
         Time.Wed ->
-            "Wedn"
+            "Wed"
 
         Time.Thu ->
             "Thu"
@@ -166,8 +166,9 @@ viewPayment timeZone payment =
     div [ class "flex column color-light" ]
         [ hr [ class "my-md" ] []
         , b [ class "font-size-lg" ]
-            [ span [] [ text ("ID " ++ String.fromInt payment.id ++ ", ") ]
-            , span [] [ text ("Table " ++ String.fromInt payment.tableId) ]
+            [ div []
+                [ text ("ID " ++ String.fromInt payment.id ++ ", Table " ++ String.fromInt payment.tableId)
+                ]
             , div [] [ text (formatTime timeZone payment.createdAtTimestamp) ]
             ]
         , div [ class "my-xs" ] [ text ("Customers: " ++ String.fromInt payment.customerCount) ]
@@ -205,14 +206,18 @@ viewPayments : Maybe Time.Zone -> Array Payment -> Html msg
 viewPayments timeZone payments =
     div [ class "flex p-md column" ]
         [ div [ class "color-light font-size-lg mb-md font-style-italic" ] [ text "Payment history" ]
-        , Keyed.node "div"
-            []
-            (payments
-                |> Array.toList
-                |> List.sortBy (.createdAtTimestamp >> Time.posixToMillis)
-                |> List.reverse
-                |> List.map (viewKeyedPayments timeZone)
-            )
+        , if Array.isEmpty payments then
+            div [ class "color-light" ] [ text "No payments in the database" ]
+
+          else
+            Keyed.node "div"
+                []
+                (payments
+                    |> Array.toList
+                    |> List.sortBy (.createdAtTimestamp >> Time.posixToMillis)
+                    |> List.reverse
+                    |> List.map (viewKeyedPayments timeZone)
+                )
         ]
 
 
