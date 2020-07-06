@@ -7,7 +7,7 @@ import Html exposing (Html, b, button, div, form, input, label, span, text)
 import Html.Attributes as Attr exposing (class, for, name, required, step, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy2)
 import Round
 
 
@@ -255,24 +255,37 @@ viewAddOrEditDrink model =
             text ""
 
 
-viewDrink : Drink -> Html Msg
-viewDrink drink =
+viewDrink : Maybe Drink -> Drink -> Html Msg
+viewDrink currentlyEditedDrink drink =
+    let
+        drinkHighlightClass =
+            case currentlyEditedDrink of
+                Just { id } ->
+                    if id == drink.id then
+                        "font-weight-700 text-shadow-error"
+
+                    else
+                        ""
+
+                Nothing ->
+                    ""
+    in
     div [ class "flex align-center row color-light mb-sm" ]
-        [ div [] [ text (drink.name ++ " " ++ String.fromInt drink.volume ++ "ml") ]
+        [ div [ class drinkHighlightClass ] [ text (drink.name ++ " " ++ String.fromInt drink.volume ++ "ml") ]
         , div [ class "leaders flex-1 height-sm mx-xs" ] []
-        , div [] [ text (Round.floor 2 drink.price) ]
+        , div [ class drinkHighlightClass ] [ text (Round.floor 2 drink.price) ]
         , button [ class "button ml-sm", onClick (ChangeEditedDrink (Just drink)) ] [ text "Edit" ]
         , button [ class "button ml-sm", onClick (RemoveDrink drink) ] [ text "×" ]
         ]
 
 
-viewKeyedDrinks : Drink -> ( String, Html Msg )
-viewKeyedDrinks drink =
-    ( String.fromInt drink.id, lazy viewDrink drink )
+viewKeyedDrinks : Maybe Drink -> Drink -> ( String, Html Msg )
+viewKeyedDrinks currentlyEditedDrink drink =
+    ( String.fromInt drink.id, lazy2 viewDrink currentlyEditedDrink drink )
 
 
-viewDrinks : Array Drink -> Html Msg
-viewDrinks drinks =
+viewDrinks : Model a -> Html Msg
+viewDrinks { drinks, currentlyEditedDrink } =
     div []
         [ div [ class "color-light font-size-lg my-md font-style-italic" ] [ text "Drinks" ]
         , Keyed.node "div"
@@ -280,7 +293,7 @@ viewDrinks drinks =
             (drinks
                 |> Array.toList
                 |> List.sortBy .name
-                |> List.map viewKeyedDrinks
+                |> List.map (viewKeyedDrinks currentlyEditedDrink)
             )
         , button [ class "button width-full font-size-lg", onClick SetAddingDrink ] [ text "+ Add drink" ]
         ]

@@ -98,8 +98,8 @@ view model =
             ]
         , div [ class "flex admin-entries-container" ]
             [ div [ class "flex-1 p-md" ]
-                [ Html.map MealsUpdateMsg (viewMeals model.meals)
-                , Html.map DrinksUpdateMsg (viewDrinks model.drinks)
+                [ Html.map MealsUpdateMsg (viewMeals model)
+                , Html.map DrinksUpdateMsg (viewDrinks model)
                 ]
             , viewEditedEntry model
             ]

@@ -7,7 +7,7 @@ import Html exposing (Html, b, button, div, form, input, label, span, text)
 import Html.Attributes as Attr exposing (class, for, name, required, step, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy2)
 import Round
 
 
@@ -225,24 +225,37 @@ viewAddOrEditMeal model =
             text ""
 
 
-viewMeal : Meal -> Html Msg
-viewMeal meal =
+viewMeal : Maybe Meal -> Meal -> Html Msg
+viewMeal currentlyEditedMeal meal =
+    let
+        mealHighlightClass =
+            case currentlyEditedMeal of
+                Just { id } ->
+                    if id == meal.id then
+                        "font-weight-700 text-shadow-error"
+
+                    else
+                        ""
+
+                Nothing ->
+                    ""
+    in
     div [ class "flex align-center row color-light mb-sm" ]
-        [ div [] [ text meal.name ]
+        [ div [ class mealHighlightClass ] [ text meal.name ]
         , div [ class "leaders flex-1 height-sm mx-xs" ] []
-        , div [] [ text (Round.floor 2 meal.price) ]
+        , div [ class mealHighlightClass ] [ text (Round.floor 2 meal.price) ]
         , button [ class "button ml-sm", onClick (ChangeEditedMeal (Just meal)) ] [ text "Edit" ]
         , button [ class "button ml-sm", onClick (RemoveMeal meal) ] [ text "×" ]
         ]
 
 
-viewKeyedMeals : Meal -> ( String, Html Msg )
-viewKeyedMeals meal =
-    ( String.fromInt meal.id, lazy viewMeal meal )
+viewKeyedMeals : Maybe Meal -> Meal -> ( String, Html Msg )
+viewKeyedMeals currentlyEditedMeal meal =
+    ( String.fromInt meal.id, lazy2 viewMeal currentlyEditedMeal meal )
 
 
-viewMeals : Array Meal -> Html Msg
-viewMeals meals =
+viewMeals : Model a -> Html Msg
+viewMeals { meals, currentlyEditedMeal } =
     div []
         [ div [ class "color-light font-size-lg mb-md font-style-italic" ] [ text "Meals" ]
         , Keyed.node "div"
@@ -250,7 +263,7 @@ viewMeals meals =
             (meals
                 |> Array.toList
                 |> List.sortBy .name
-                |> List.map viewKeyedMeals
+                |> List.map (viewKeyedMeals currentlyEditedMeal)
             )
         , button [ class "button width-full font-size-lg", onClick SetAddingMeal ] [ text "+ Add meal" ]
         ]

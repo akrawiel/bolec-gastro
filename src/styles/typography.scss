@@ -41,3 +41,7 @@
 .font-family-cursive {
   font-family: 'Lily Script One', cursive;
 }
+
+.text-shadow-error {
+  filter: drop-shadow(2px 2px 2px $error);
+}
